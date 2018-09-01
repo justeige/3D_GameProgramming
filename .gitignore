@@ -1,0 +1,13 @@
+
+*.db
+
+*.opendb
+
+*.ipch
+
+*.user
+
+*.suo
+*Debug/
+*sdl2/
+*.lib
