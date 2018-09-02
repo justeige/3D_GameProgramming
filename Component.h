@@ -30,13 +30,13 @@ struct Component_Base {
 
     // register system
     static ID register_component(Component_Create_Function create_func, Component_Delete_Function delete_func, std::size_t size);
-    static std::vector<Allocation_Data> types;
+    static std::vector<Allocation_Data>* types;
 
     // accessors
-    inline static Component_Create_Function create_function_of(ID id) { return types[id].create_func; }
-    inline static Component_Delete_Function delete_function_of(ID id) { return types[id].delete_func; }
-    inline static std::size_t size_of(ID id) { return types[id].size; }
-    inline static bool is_valid(ID id) { return id < types.size(); }
+    inline static Component_Create_Function create_function_of(ID id) { return (*types)[id].create_func; }
+    inline static Component_Delete_Function delete_function_of(ID id) { return (*types)[id].delete_func; }
+    inline static std::size_t size_of(ID id) { return (*types)[id].size; }
+    inline static bool is_valid(ID id) { return id < types->size(); }
 };
 
 template <class T>

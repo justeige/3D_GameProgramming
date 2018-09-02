@@ -16,7 +16,7 @@ ECS::~ECS()
     for (u32 n = 0; n < m_entities.size(); ++n) { delete m_entities[n]; }
 }
 
-Entity_Handle ECS::make_entity(Component_Base* entity_components, ID const* component_ids, std::size_t num_components)
+Entity_Handle ECS::make_entity(Component_Base** entity_components, ID const* component_ids, std::size_t num_components)
 {
     auto new_entity = new Entity();
     Entity_Handle handle = (Entity_Handle)new_entity;
@@ -31,7 +31,7 @@ Entity_Handle ECS::make_entity(Component_Base* entity_components, ID const* comp
             return nullptr;
         }
 
-        add_component_internal(handle, new_entity->second, id, &entity_components[n]);
+        add_component_internal(handle, new_entity->second, id, entity_components[n]);
     }
 
     new_entity->first = m_entities.size();
@@ -54,6 +54,7 @@ void ECS::remove_entity(Entity_Handle* handle)
 
     // swap the obj to delte to the back and delete from there
     m_entities[dest_index] = m_entities[src_index];
+    m_entities[dest_index]->first = dest_index;
     m_entities.pop_back();
 }
 
@@ -126,35 +127,37 @@ Component_Base* ECS::component_internal(std::vector<std::pair<u32, u32>>& entity
     return nullptr;
 }
 
-void ECS::update_systems(float delta)
+void ECS::update_systems(System_List& systems, float delta)
 {
     std::vector<Component_Base*>  component_param;
     std::vector<std::vector<u8>*> component_arrays;
 
-    for_size(m_systems) {
-        const auto types = m_systems[n]->types;
+    for_size(systems) {
+        const auto types = systems[n]->types;
         if (types.size() == 1) {
             auto type_size = Component_Base::size_of(types[0]);
             auto arr = m_components[types[0]];
             for (u32 i = 0; i < arr.size(); i += type_size) {
                 auto* component = (Component_Base*)&arr[i];
-                m_systems[n]->update(delta, &component);
+                systems[n]->update(delta, &component);
             }
         }
         else {
-            update_system_with_multiple(n, delta, types, component_param, component_arrays);
+            update_system_with_multiple(n, systems, delta, types, component_param, component_arrays);
         }
     }
 }
 
-void ECS::update_system_with_multiple(u32 index, float delta, std::vector<u32> const & types, std::vector<Component_Base*>& component_param, std::vector<std::vector<u8>*>& component_arrays)
+void ECS::update_system_with_multiple(u32 index, System_List systems, float delta, std::vector<u32> const & types, std::vector<Component_Base*>& component_param, std::vector<std::vector<u8>*>& component_arrays)
 {
+    auto component_flags = systems[index]->flags;
+
     component_param.resize(std::max(component_param.size(),   types.size()));
     component_arrays.resize(std::max(component_arrays.size(), types.size()));
 
     for_size(types) { component_arrays[n] = &m_components[types[n]]; }
 
-    u32 min_size_index = find_least_common_component(types);
+    u32 min_size_index = find_least_common_component(types, component_flags);
     auto type_size = Component_Base::size_of(types[min_size_index]);
     auto& arr = *component_arrays[min_size_index];
 
@@ -167,40 +170,32 @@ void ECS::update_system_with_multiple(u32 index, float delta, std::vector<u32> c
             if (n == min_size_index) { continue; }
 
             component_param[n] = component_internal(entity_components, *component_arrays[n], types[n]);
-            if (component_param[n] == nullptr) {
+            if (component_param[n] == nullptr && (component_flags[n] & System_Base::FL_Optional) == 0) {
                 is_valid = false;
                 break;
             }
         }
 
         if (is_valid) {
-            m_systems[index]->update(delta, &component_param[0]);
+            systems[index]->update(delta, &component_param[0]);
         }
     }
 }
 
-bool ECS::remove_system(System_Base& system)
+u32 ECS::find_least_common_component(std::vector<u32> const & types, std::vector<u32> const& flags)
 {
-    for_size(m_systems) {
-        if (m_systems[n] == &system) {
-            m_systems.erase(std::begin(m_systems) + n);
-            return true;
-        }
-    }
-
-    // system not found
-    return false;
-}
-
-u32 ECS::find_least_common_component(std::vector<u32> const & types)
-{
-    u32 min_size = m_components[types[0]].size() / Component_Base::size_of(types[0]);
-    u32 min_index = 0;
+    u32 min_size  = (u32)-1;
+    u32 min_index = (u32)-1;
 
     for_size(types) {
+
+        if ((flags[n] & System_Base::FL_Optional) != 0) {
+            continue;
+        }
+
         auto type_size = Component_Base::size_of(types[n]);
         u32 size = m_components[types[n]].size() / type_size;
-        if (size < min_size) {
+        if (size <= min_size) {
             min_size = size;
             min_index = n;
         }

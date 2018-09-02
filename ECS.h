@@ -24,14 +24,23 @@ struct ECS final {
     void operator=(ECS && other)     = delete;
 
     // data
-    std::vector<System_Base*> m_systems;
+    //System_List               m_systems;
     std::map<ID, Bytes>       m_components;
     std::vector<Entity*>      m_entities;
 
 
     // entity methods
-    Entity_Handle make_entity(Component_Base* components, ID const* components_ids, std::size_t num_components);
+    Entity_Handle make_entity(Component_Base** components, ID const* components_ids, std::size_t num_components);
     void remove_entity(Entity_Handle* handle);
+
+    template <class C1, class C2>
+    Entity_Handle make_from(C1& c1, C2& c2)
+    {
+        Component_Base* components[] = { &c1, &c2 };
+        u32 ids[] = { C1::Id, C2::Id };
+        return make_entity(components, ids, 2);
+    }
+
 
     // component methods
     template <class TComponent>
@@ -44,16 +53,15 @@ struct ECS final {
     void delete_component(ID component_id, u32 index);
 
     template <class TComponent>
-    Component_Base* component(Entity_Handle handle) { component_internal(handle_to_entity(handle), m_components[TComponent::Id], TComponent::Id); }
+    TComponent* component(Entity_Handle handle) { (TComponent*)component_internal(handle_to_entity(handle), m_components[TComponent::Id], TComponent::Id); }
     Component_Base* component_internal(std::vector<std::pair<u32, u32>>& entity_components, std::vector<u8>& arr, ID component_id);
 
-    u32 find_least_common_component(std::vector<u32> const& types);
+    u32 find_least_common_component(std::vector<u32> const& types, std::vector<u32> const& flags);
 
     // system methods
-    void add_system(System_Base& system) { m_systems.push_back(&system); }
-    void update_systems(float delta);
-    void update_system_with_multiple(u32 index, float delta, std::vector<u32> const& types, std::vector<Component_Base*>& component_param, std::vector<std::vector<u8>*>&);
-    bool remove_system(System_Base& system);
+    void update_systems(System_List& list, float delta);
+    void update_system_with_multiple(u32 index, System_List systems, float delta, std::vector<u32> const& types, std::vector<Component_Base*>& component_param, std::vector<std::vector<u8>*>&);
+
 
     // accessors
     Entity* to_raw_type(Entity_Handle handle) const { return (Entity*)handle; }
