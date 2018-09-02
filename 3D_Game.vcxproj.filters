@@ -5,11 +5,14 @@
     <ClCompile Include="Component.cpp" />
     <ClCompile Include="ECS.cpp" />
     <ClCompile Include="System.cpp" />
+    <ClCompile Include="Window.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Common.h" />
     <ClInclude Include="Component.h" />
     <ClInclude Include="System.h" />
     <ClInclude Include="ECS.h" />
+    <ClInclude Include="Window.h" />
+    <ClInclude Include="Vector.h" />
   </ItemGroup>
 </Project>
