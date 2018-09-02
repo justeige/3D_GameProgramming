@@ -35,15 +35,17 @@ struct ECS final {
 
     // component methods
     template <class TComponent>
-    void add_component(Entity_Handle handle, TComponent* c);
+    void add_component(Entity_Handle entity, TComponent* c) { add_component_internal(handle_to_entity(entity), TComponent::Id, c); }
+    void add_component_internal(Entity_Handle handle, std::vector<std::pair<u32, u32>>& entity, ID component_id, Component_Base* component);
 
     template <class TComponent>
-    void remove_component(Entity_Handle handle);
-
-    void remove_component_internal(ID component_id, u32 index);
+    bool remove_component(Entity_Handle handle) { return remove_component_internal(handle, TComponent::Id); }
+    bool remove_component_internal(Entity_Handle handle, ID component_id);
+    void delete_component(ID component_id, u32 index);
 
     template <class TComponent>
-    void component(Entity_Handle handle);
+    Component_Base* component(Entity_Handle handle) { component_internal(handle_to_entity(handle), TComponent::Id); }
+    Component_Base* component_internal(std::vector<std::pair<u32, u32>>& entity_components, ID component_id);
 
     // system methods
     void add_system(System_Base& system) { m_systems.push_back(&system); }
