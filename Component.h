@@ -16,14 +16,30 @@ using Component_Create_Function = ID(*)(std::vector<Byte>&, Entity_Handle, Compo
 using Component_Delete_Function = void (*)(Component_Base*);
 
 
-// create a new id for components
-ID Make_ID();
-
 struct Component_Base {
+
+    // inner type for easier managment
+    struct Allocation_Data {
+        Component_Create_Function create_func;
+        Component_Delete_Function delete_func;
+        std::size_t               size;
+    };
+
+    // this will point to the actual entity
     Entity_Handle entity;
+
+    // register system
+    static ID register_component(Component_Create_Function create_func, Component_Delete_Function delete_func, std::size_t size);
+    static std::vector<Allocation_Data> types;
+
+    // accessors
+    inline static Component_Create_Function create_function_of(ID id) { return types[id].create_func; }
+    inline static Component_Delete_Function delete_function_of(ID id) { return types[id].delete_func; }
+    inline static std::size_t size_of(ID id) { return types[id].size; }
+    inline static bool is_valid(ID id) { return id < types.size(); }
 };
 
-template <class TComponent>
+template <class T>
 struct Component : public Component_Base {
     static const ID Id;
     static const std::size_t Mem_Size;
@@ -32,40 +48,50 @@ struct Component : public Component_Base {
 };
 
 // create a new component by copying from a 'blueprint'
-template <class TComponent>
+template <class T>
 ID CreateComponent(std::vector<Byte>& memory, Entity_Handle entity, Component_Base* blueprint)
 {
+    assert(entity    != nullptr);
+    assert(blueprint != nullptr);
+
     // allocate memory for component
     u32 index = memory.size();
-    memory.resize(index + TComponent::Mem_Size);
+    memory.resize(index + T::Mem_Size);
 
     // don't allocate on the heap, but in the already allocated 'memory'!
-    TComponent* component = new (&memory[index]) TComponent(*(TComponent*)blueprint);
+    T* component = new (&memory[index]) T(*(T*)blueprint);
     component->entity = entity;
     return index;
 }
 
-template <class TComponent>
+template <class T>
 void DeleteComponent(Component_Base* c)
 {
     assert(c != nullptr);
 
-    TComponent* component = (TComponent*)c;
+    T* component = (T*)c;
     assert(component != nullptr); // typecast shouldn't fail!
-    component-> ~TComponent();
+    component-> ~T();
 }
 
 
 // static init
-template <class TComponent>
-const ID Component<TComponent>::Id(Make_ID());
+template <class T>
+const ID Component<T>::Id(Component_Base::register_component(CreateComponent<T>, DeleteComponent<T>, sizeof(T)));
 
-template <class TComponent>
-const std::size_t Component<TComponent>::Mem_Size(sizeof(TComponent));
+template <class T>
+const std::size_t Component<T>::Mem_Size(sizeof(T));
 
-template <class TComponent>
-const Component_Create_Function Component<TComponent>::Create_Func(CreateComponent<TComponent>);
+template <class T>
+const Component_Create_Function Component<T>::Create_Func(CreateComponent<T>);
 
-template <class TComponent>
-const Component_Delete_Function Component<TComponent>::Delete_Func(DeleteComponent<TComponent>);
+template <class T>
+const Component_Delete_Function Component<T>::Delete_Func(DeleteComponent<T>);
 
+
+
+// this empty component is only here to check compiler issues!
+/// TODO remove if the first real components are in the program
+struct Test_Component : public Component<Test_Component> {
+    /*does nothing!*/
+};

@@ -1,8 +1,8 @@
 #include "Component.h"
 
-static u32 Global_Component_ID = 0;
-
-ID Make_ID()
+ID Component_Base::register_component(Component_Create_Function create_func, Component_Delete_Function delete_func, std::size_t size)
 {
-    return Global_Component_ID++;
+    ID id = types.size();
+    types.push_back({ create_func, delete_func, size });
+    return id;
 }
