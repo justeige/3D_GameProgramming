@@ -44,13 +44,16 @@ struct ECS final {
     void delete_component(ID component_id, u32 index);
 
     template <class TComponent>
-    Component_Base* component(Entity_Handle handle) { component_internal(handle_to_entity(handle), TComponent::Id); }
-    Component_Base* component_internal(std::vector<std::pair<u32, u32>>& entity_components, ID component_id);
+    Component_Base* component(Entity_Handle handle) { component_internal(handle_to_entity(handle), m_components[TComponent::Id], TComponent::Id); }
+    Component_Base* component_internal(std::vector<std::pair<u32, u32>>& entity_components, std::vector<u8>& arr, ID component_id);
+
+    u32 find_least_common_component(std::vector<u32> const& types);
 
     // system methods
     void add_system(System_Base& system) { m_systems.push_back(&system); }
     void update_systems(float delta);
-    void remove_system(System_Base& system);
+    void update_system_with_multiple(u32 index, float delta, std::vector<u32> const& types, std::vector<Component_Base*>& component_param, std::vector<std::vector<u8>*>&);
+    bool remove_system(System_Base& system);
 
     // accessors
     Entity* to_raw_type(Entity_Handle handle) const { return (Entity*)handle; }
