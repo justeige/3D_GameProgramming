@@ -28,7 +28,7 @@ struct System_Base {
     // a system of only optional components is not supported
     bool is_valid() const
     {
-        for_size(flags) {
+        for_size(n, flags) {
             if ((flags[n] & FL_Optional) == 0) {
                 return true;
             }

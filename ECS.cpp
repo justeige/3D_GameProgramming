@@ -71,7 +71,7 @@ void ECS::add_component_internal(Entity_Handle handle, std::vector<std::pair<u32
 bool ECS::remove_component_internal(Entity_Handle handle, ID component_id)
 {
     auto& entity_components = handle_to_entity(handle);
-    for_size (entity_components) { /// TODO structed return [id, index] ?
+    for_size (n, entity_components) { /// TODO structed return [id, index] ?
         if (component_id == entity_components[n].first) {
             delete_component(entity_components[n].first, entity_components[n].second);
             u32 src_index = entity_components.size() - 1;
@@ -106,7 +106,7 @@ void ECS::delete_component(ID component_id, u32 index)
 
     ::memcpy(dest_component, src_component, type_size);
     auto& src_components = handle_to_entity(src_component->entity);
-    for_size(src_components) {
+    for_size(n, src_components) {
         if (component_id == src_components[n].first && src_index == src_components[n].second) {
             src_components[n].second = index;
             break; // this works only if there is just one component of a type per entity... create multi-components if more needed?
@@ -117,7 +117,7 @@ void ECS::delete_component(ID component_id, u32 index)
 
 Component_Base* ECS::component_internal(std::vector<std::pair<u32, u32>>& entity_components, std::vector<u8>& arr, ID component_id)
 {
-    for_size(entity_components) {
+    for_size(n, entity_components) {
         if (component_id == entity_components[n].first) {
             return (Component_Base*)&arr[entity_components[n].second];
         }
@@ -132,7 +132,7 @@ void ECS::update_systems(System_List& systems, float delta)
     std::vector<Component_Base*>  component_param;
     std::vector<std::vector<u8>*> component_arrays;
 
-    for_size(systems) {
+    for_size(n, systems) {
         const auto types = systems[n]->types;
         if (types.size() == 1) {
             auto type_size = Component_Base::size_of(types[0]);
@@ -155,7 +155,7 @@ void ECS::update_system_with_multiple(u32 index, System_List systems, float delt
     component_param.resize(std::max(component_param.size(),   types.size()));
     component_arrays.resize(std::max(component_arrays.size(), types.size()));
 
-    for_size(types) { component_arrays[n] = &m_components[types[n]]; }
+    for_size(n, types) { component_arrays[n] = &m_components[types[n]]; }
 
     u32 min_size_index = find_least_common_component(types, component_flags);
     auto type_size = Component_Base::size_of(types[min_size_index]);
@@ -166,7 +166,7 @@ void ECS::update_system_with_multiple(u32 index, System_List systems, float delt
         auto& entity_components = handle_to_entity(component_param[min_size_index]->entity);
 
         bool is_valid = true;
-        for_size(types) {
+        for_size(n, types) {
             if (n == min_size_index) { continue; }
 
             component_param[n] = component_internal(entity_components, *component_arrays[n], types[n]);
@@ -187,7 +187,7 @@ u32 ECS::find_least_common_component(std::vector<u32> const & types, std::vector
     u32 min_size  = (u32)-1;
     u32 min_index = (u32)-1;
 
-    for_size(types) {
+    for_size(n, types) {
 
         if ((flags[n] & System_Base::FL_Optional) != 0) {
             continue;

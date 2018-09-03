@@ -23,4 +23,12 @@ using Bytes = std::vector<Byte>;
 
 
 // macros
-#define for_size(container) for (u32 n = 0; n < std::size(container); ++n)
+#define for_size(var, container) for (u32 var = 0; var < std::size(container); ++var)
+
+#define no_copy_and_assign(obj) \
+    obj(obj const& other) = delete; \
+    void operator=(obj const& other) = delete;
+
+#define no_move_and_assign(obj) \
+    obj(obj && other) = delete; \
+    void operator=(obj && other) = delete;

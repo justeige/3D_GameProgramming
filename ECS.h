@@ -17,11 +17,8 @@ struct ECS final {
     ECS() {}
     ~ECS();
 
-    // no copy & move
-    ECS(ECS const& other) = delete;
-    ECS(ECS && other)     = delete;
-    void operator=(ECS const& other) = delete;
-    void operator=(ECS && other)     = delete;
+    no_copy_and_assign(ECS);
+    no_move_and_assign(ECS);
 
     // data
     //System_List               m_systems;

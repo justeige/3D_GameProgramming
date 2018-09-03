@@ -11,7 +11,7 @@ bool System_List::add_system(System_Base& system)
 
 bool System_List::remove_system(System_Base& system)
 {
-    for_size(m_systems) {
+    for_size(n, m_systems) {
         if (m_systems[n] == &system) {
             m_systems.erase(std::begin(m_systems) + n);
             return true;
