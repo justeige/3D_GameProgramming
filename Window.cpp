@@ -6,14 +6,14 @@
 Window::Window(const char * title, i32 width, i32 height) : w(width), h(height)
 {
     SDL_Init(SDL_INIT_EVERYTHING); /// TODO move into render context
-    window = SDL_CreateWindow(title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, SDL_WINDOW_OPENGL);
-    renderer = SDL_CreateRenderer(window, -1, 0);
+    handle = SDL_CreateWindow(title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, SDL_WINDOW_OPENGL);
+    renderer = SDL_CreateRenderer(handle, -1, 0);
 }
 
 Window::~Window()
 {
     SDL_DestroyRenderer(renderer);
-    SDL_DestroyWindow(window);
+    SDL_DestroyWindow(handle);
 }
 
 bool Window::should_quit()
@@ -31,8 +31,8 @@ bool Window::should_quit()
 
 void Window::swap()
 {
-    assert(window != nullptr);
-    SDL_GL_SwapWindow(window);
+    assert(handle != nullptr);
+    SDL_GL_SwapWindow(handle);
 }
 
 void Window::clear(float value)

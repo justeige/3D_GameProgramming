@@ -6,6 +6,7 @@
     <ClCompile Include="ECS.cpp" />
     <ClCompile Include="System.cpp" />
     <ClCompile Include="Window.cpp" />
+    <ClCompile Include="Render_Device.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Common.h" />
@@ -14,5 +15,6 @@
     <ClInclude Include="ECS.h" />
     <ClInclude Include="Window.h" />
     <ClInclude Include="Vector.h" />
+    <ClInclude Include="Render_Device.h" />
   </ItemGroup>
 </Project>

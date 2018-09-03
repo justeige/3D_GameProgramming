@@ -1,9 +1,5 @@
 #pragma once
 
-// --------------------------------------------------
-// window obj is the render context
-// --------------------------------------------------
-
 #include "Common.h"
 
 // forward decl.
@@ -12,13 +8,16 @@ struct SDL_Renderer;
 
 struct Window {
 
-    SDL_Window* window = nullptr;
+    SDL_Window* handle = nullptr;
     SDL_Renderer* renderer = nullptr; /// TODO move into renderer context
     i32 w = 800, h = 600;
 
 
     Window(const char* title, i32 width, i32 height);
     ~Window();
+
+    no_copy_and_assign(Window);
+    no_move_and_assign(Window);
 
     bool should_quit();
     void swap();
