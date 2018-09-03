@@ -1,5 +1,7 @@
 # 3D_GameProgramming
-Game programming in modern C++
+Game programming in modern C++ / OpenGL.
+
+[Currently working in ECS.cpp]
 
 
 Current goals:
