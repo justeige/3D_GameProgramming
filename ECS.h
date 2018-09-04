@@ -1,8 +1,14 @@
 #pragma once
 // --------------------------------------------------
-// connector of the entity-component-system
+// core of the entity-component-system
 // --------------------------------------------------
-
+//
+// explanations:
+// the whole design tries to be data oriented, not object-oriented.
+// Component := blobs of data, those objects should never hold any logic. Ex. Location_Component would only hold 3D data for an object.
+// Entity    := only a collection of different components, hold only indices, no data & no logic.
+// System    := an abstract object that contains all logic for a number of components. Ex. Physics_System, Collision_System, Render_System...
+//
 #include "Common.h"
 #include "Component.h"
 #include "System.h"

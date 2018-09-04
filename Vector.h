@@ -4,6 +4,8 @@
 // templated mathematical vector
 // --------------------------------------------------
 
+#include <cstddef>
+
 // generic base
 template <class Type, std::size_t Size>
 struct Vector {

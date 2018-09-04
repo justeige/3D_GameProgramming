@@ -9,6 +9,8 @@
 
 // typedefs
 
+using uint = unsigned int;
+
 using u8  = uint8_t;
 using u16 = uint16_t;
 using u32 = uint32_t;
@@ -32,3 +34,13 @@ using Bytes = std::vector<Byte>;
 #define no_move_and_assign(obj) \
     obj(obj && other) = delete; \
     void operator=(obj && other) = delete;
+
+
+/// TODO move into own header if needed elsewhere
+template <class Action>
+struct Deferred_Action {
+    Deferred_Action(Action&& a) : action(a) {}
+    ~Deferred_Action() { action(); }
+    Action action;
+};
+#define ON_EXIT(action) Deferred_Action deferred_action_([](){action})
