@@ -36,6 +36,13 @@ using Bytes = std::vector<Byte>;
     void operator=(obj && other) = delete;
 
 
+// black magic macros for unique names
+// src = https://stackoverflow.com/questions/2419650/c-c-macro-template-blackmagic-to-generate-unique-name
+#define CONCATENATE_DETAIL(x, y) x##y
+#define CONCATENATE(x, y) CONCATENATE_DETAIL(x, y)
+#define MAKE_UNIQUE_NAME(x) CONCATENATE(x, __COUNTER__)
+
+
 /// TODO move into own header if needed elsewhere
 template <class Action>
 struct Deferred_Action {
@@ -43,4 +50,4 @@ struct Deferred_Action {
     ~Deferred_Action() { action(); }
     Action action;
 };
-#define ON_EXIT(action) Deferred_Action deferred_action_([](){action;})
+#define ON_EXIT(action) Deferred_Action MAKE_UNIQUE_NAME(deferred_action_)([&](){action;})

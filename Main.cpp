@@ -1,6 +1,8 @@
-//#include "Common.h"
 #include "Vector.h"
 #include "ECS.h"
+#include "Graphics.h"
+
+#include <iostream>
 
 struct TestComponent1 : public Component<TestComponent1> {
     int x, y, z;
@@ -15,46 +17,34 @@ void ecs_core_test();
 #pragma comment(lib, "opengl32.lib")
 #pragma comment(lib, "glfw3dll.lib")
 
+#include <glad/glad.h>
 #include <glfw/glfw3.h>
+
 
 
 int main()
 {
     ecs_core_test();
 
-    if (glfwInit() == GL_FALSE) {
-        return -1;
-    }
-    ON_EXIT(glfwTerminate());
-
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-    int width = 800, height = 600;
-    GLFWwindow* window = glfwCreateWindow(width, height, "3D_Game", NULL, NULL);
+    auto window = OpenGL::GlobalInit();
     if (window == nullptr) {
         return -1;
     }
-    glfwMakeContextCurrent(window);
+    ON_EXIT(OpenGL::GlobalTeardown());
 
-    auto framebuffer_size_callback = [](GLFWwindow* window, int width, int height) {
-        glViewport(0, 0, width, height);
-    };
-    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
-    while (!glfwWindowShouldClose(window)) {
-        // input
-        if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
-            glfwSetWindowShouldClose(window, true);
-        }
+    // render the cannonical open-gl triangle
+    Shader_Ref test_shader = OpenGL::CreateTestShader();
+    if (test_shader == Bad_Shader) {
+        return -1;
+    }
 
-        // render
-        glClearColor(0.0f, 0.7f, 0.0f, 0.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
+    uint VBO, VAO;
+    OpenGL::CreateTestBuffer(VBO, VAO);
 
-        glfwSwapBuffers(window);
-        glfwPollEvents();
+    while (OpenGL::IsOpen(window)) {
+        OpenGL::RenderTest(test_shader, VAO);
+        OpenGL::PollAndSwap(window);
     }
 
     return 0;

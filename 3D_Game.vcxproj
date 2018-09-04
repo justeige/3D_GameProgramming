@@ -21,6 +21,8 @@
   <ItemGroup>
     <ClCompile Include="Component.cpp" />
     <ClCompile Include="ECS.cpp" />
+    <ClCompile Include="glad.c" />
+    <ClCompile Include="Graphics.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="System.cpp" />
   </ItemGroup>
@@ -28,6 +30,7 @@
     <ClInclude Include="Common.h" />
     <ClInclude Include="Component.h" />
     <ClInclude Include="ECS.h" />
+    <ClInclude Include="Graphics.h" />
     <ClInclude Include="System.h" />
     <ClInclude Include="Vector.h" />
   </ItemGroup>
