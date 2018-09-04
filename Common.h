@@ -43,4 +43,4 @@ struct Deferred_Action {
     ~Deferred_Action() { action(); }
     Action action;
 };
-#define ON_EXIT(action) Deferred_Action deferred_action_([](){action})
+#define ON_EXIT(action) Deferred_Action deferred_action_([](){action;})
