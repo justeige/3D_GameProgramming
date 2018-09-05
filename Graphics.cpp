@@ -91,7 +91,7 @@ void OpenGL::PollAndSwap(GLFWwindow* window)
     glfwSwapBuffers(window);
 }
 
-Shader_Ref OpenGL::CreateShader(const char* vertex_path, const char* fragment_path)
+Shader_ID OpenGL::CreateShaderID(const char* vertex_path, const char* fragment_path)
 {
     auto[vertex_code, fragment_code] = File::ReadFull(vertex_path, fragment_path);
     if (!vertex_code.has_value() || !fragment_code.has_value()) {
@@ -103,7 +103,7 @@ Shader_Ref OpenGL::CreateShader(const char* vertex_path, const char* fragment_pa
     uint vertex_shader   = CompileShader(vertex_code.value().c_str(),   GL_VERTEX_SHADER);
     uint fragment_shader = CompileShader(fragment_code.value().c_str(), GL_FRAGMENT_SHADER);
 
-    Shader_Ref program_id = glCreateProgram();
+    Shader_ID program_id = glCreateProgram();
     glAttachShader(program_id, vertex_shader);
     glAttachShader(program_id, fragment_shader);
     glLinkProgram(program_id);
@@ -125,9 +125,33 @@ Shader_Ref OpenGL::CreateShader(const char* vertex_path, const char* fragment_pa
 
 // opengl data
 namespace OpenGL {
-void Shader::send_value(const char* name, bool  value) const {assert(false);/*IMPLEMENT*/}
-void Shader::send_value(const char* name, int   value) const {assert(false);/*IMPLEMENT*/}
-void Shader::send_value(const char* name, float value) const {assert(false);/*IMPLEMENT*/}
+
+void Shader::apply() const
+{
+    glUseProgram(program);
+}
+
+void Shader::send_value(const char* name, bool value) const
+{
+    auto location = glGetUniformLocation(program, name);
+    assert(location != -1);
+    glUniform1i(location, (int)value);
+}
+
+void Shader::send_value(const char* name, int value) const
+{
+    auto location = glGetUniformLocation(program, name);
+    assert(location != -1);
+    glUniform1i(location, value);
+}
+
+void Shader::send_value(const char* name, float value) const
+{
+    auto location = glGetUniformLocation(program, name);
+    assert(location != -1);
+    glUniform1f(location, value);
+}
+
 }
 
 
@@ -139,9 +163,10 @@ void OpenGL::CreateTestBuffer(uint & VBO, uint & VAO)
 {
     // set up vertex data (and buffer(s)) and configure vertex attributes for a single triangle
     float vertices[] = {
-        0.0f,  0.5f,  0.0f,
-        0.5f, -0.5f,  0.0f,
-        -0.5f, -0.5f,  0.0f
+        // positions         // colors
+        0.5f, -0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   // bottom right
+        -0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f,   // bottom left
+        0.0f,  0.5f, 0.0f,   0.0f, 0.0f, 1.0f    // top
     };
 
     glGenVertexArrays(1, &VAO);
@@ -149,13 +174,20 @@ void OpenGL::CreateTestBuffer(uint & VBO, uint & VAO)
     glBindVertexArray(VAO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+
+    // position
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), NULL);
     glEnableVertexAttribArray(0);
+
+    // color
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 }
 
-void OpenGL::RenderTest(Shader_Ref shader_ref, uint VAO)
+void OpenGL::RenderTest(Shader_ID shader_ref, uint VAO)
 {
     // wipe the drawing surface clear
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

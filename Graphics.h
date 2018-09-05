@@ -5,8 +5,8 @@
 
 struct GLFWwindow;
 
-using Shader_Ref = int;
-const Shader_Ref Bad_Shader = 0;
+using Shader_ID = int;
+const Shader_ID Bad_Shader = 0;
 
 namespace OpenGL {
 
@@ -17,21 +17,23 @@ bool        IsOpen(GLFWwindow* window);
 void        PollAndSwap(GLFWwindow* window); // poll for new events and swap the drawing buffer
 
 // shader specific
-Shader_Ref  CreateShader(const char* vertex_path, const char* fragment_path);
+Shader_ID  CreateShaderID(const char* vertex_path, const char* fragment_path);
 
 // test code for the triangle example
 void        CreateTestBuffer(uint& VBO, uint& VAO);
-void        RenderTest(Shader_Ref shader_ref, uint VAO);
+void        RenderTest(Shader_ID shader_ref, uint VAO);
 
 
 struct Shader {
-    Shader(int id) : Id(id) {}
+    Shader(Shader_ID prg) : program(prg) {}
+
+    void apply() const;
 
     void send_value(const char* name, bool  value) const;
     void send_value(const char* name, int   value) const;
     void send_value(const char* name, float value) const;
 
-    const int Id;
+    const Shader_ID program;
 };
 
 }

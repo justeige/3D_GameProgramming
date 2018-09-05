@@ -34,7 +34,7 @@ int main()
 
 
     // render the cannonical open-gl triangle
-    Shader_Ref test_shader = OpenGL::CreateShader("shader/test.vertex", "shader/test.fragment");
+    Shader_ID test_shader = OpenGL::CreateShaderID("shader/test.vertex", "shader/test.fragment");
     if (test_shader == Bad_Shader) {
         return -1;
     }
