@@ -1,14 +1,35 @@
 #include "Graphics.h"
 
+#include <array>
 
 #include <glad/glad.h>
 #include <glfw/glfw3.h>
+
+#pragma region "Module-Internal"
 
 // callbacks
 auto framebuffer_size_callback = [](GLFWwindow* window, int width, int height)
 {
     glViewport(0, 0, width, height);
 };
+
+uint CompileShader(const char* raw_code, GLenum type)
+{
+    std::array<char, 512> info = {};
+
+    uint shader_ref = glCreateShader(type);
+    glShaderSource(shader_ref, 1, &raw_code, NULL);
+    glCompileShader(shader_ref);
+    int success;
+    glGetShaderiv(shader_ref, GL_COMPILE_STATUS, &success);
+    if (!success) {
+        glGetShaderInfoLog(shader_ref, info.size(), nullptr, info.data());
+        /// TODO error handling!!!
+    }
+    return shader_ref;
+}
+
+#pragma endregion
 
 /// TODO do actual error reporting
 GLFWwindow* OpenGL::GlobalInit()
@@ -70,60 +91,49 @@ void OpenGL::PollAndSwap(GLFWwindow* window)
     glfwSwapBuffers(window);
 }
 
-Shader_Ref OpenGL::CreateTestShader()
+Shader_Ref OpenGL::CreateShader(const char* vertex_path, const char* fragment_path)
 {
+    auto[vertex_code, fragment_code] = File::ReadFull(vertex_path, fragment_path);
+    if (!vertex_code.has_value() || !fragment_code.has_value()) {
+        /// TODO error handling!!!
+        assert(false);
+        return Bad_Shader;
+    }
+
+    uint vertex_shader   = CompileShader(vertex_code.value().c_str(),   GL_VERTEX_SHADER);
+    uint fragment_shader = CompileShader(fragment_code.value().c_str(), GL_FRAGMENT_SHADER);
+
+    Shader_Ref program_id = glCreateProgram();
+    glAttachShader(program_id, vertex_shader);
+    glAttachShader(program_id, fragment_shader);
+    glLinkProgram(program_id);
+
+    std::array<char, 512> info = {};
     int success;
-    char info_log[512];
-
-    auto vertex_shader_code = "#version 330 core\n"
-                              "layout (location = 0) in vec3 aPos;\n"
-                              "void main()\n"
-                              "{\n"
-                              "   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
-                              "}\0";
-    auto fragment_shader_code = "#version 330 core\n"
-                                "out vec4 FragColor;\n"
-                                "void main()\n"
-                                "{\n"
-                                "   FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
-                                "}\n\0";
-
-    int vertex_shader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertex_shader, 1, &vertex_shader_code, NULL);
-    glCompileShader(vertex_shader);
-    glGetShaderiv(vertex_shader, GL_COMPILE_STATUS, &success);
+    glGetProgramiv(program_id, GL_LINK_STATUS, &success);
     if (!success) {
-        glGetShaderInfoLog(vertex_shader, 512, NULL, info_log);
-        /// TODO error logging for info_log
-        return Bad_Shader;
-    }
-    ON_EXIT(glDeleteShader(vertex_shader));
-
-
-    int fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragment_shader, 1, &fragment_shader_code, NULL);
-    glCompileShader(fragment_shader);
-    glGetShaderiv(fragment_shader, GL_COMPILE_STATUS, &success);
-    if (!success) {
-        glGetShaderInfoLog(fragment_shader, 512, NULL, info_log);
-        /// TODO error logging for info_log
-        return Bad_Shader;
-    }
-    ON_EXIT(glDeleteShader(fragment_shader));
-
-    int shader_ref = glCreateProgram();
-    glAttachShader(shader_ref, vertex_shader);
-    glAttachShader(shader_ref, fragment_shader);
-    glLinkProgram(shader_ref);
-    glGetProgramiv(shader_ref, GL_LINK_STATUS, &success);
-    if (!success) {
-        glGetProgramInfoLog(shader_ref, 512, NULL, info_log);
-        /// TODO error logging for info_log
+        glGetProgramInfoLog(program_id, info.size(), nullptr, info.data());
+        /// TODO error handling!!!
         return Bad_Shader;
     }
 
-    return shader_ref;
+    // shaders should be linked to the program and are no longer needed
+    glDeleteShader(vertex_shader);
+    glDeleteShader(fragment_shader);
+    return program_id;
 }
+
+// opengl data
+namespace OpenGL {
+void Shader::send_value(const char* name, bool  value) const {assert(false);/*IMPLEMENT*/}
+void Shader::send_value(const char* name, int   value) const {assert(false);/*IMPLEMENT*/}
+void Shader::send_value(const char* name, float value) const {assert(false);/*IMPLEMENT*/}
+}
+
+
+
+
+#pragma region "Test-Code"
 
 void OpenGL::CreateTestBuffer(uint & VBO, uint & VAO)
 {
@@ -155,4 +165,27 @@ void OpenGL::RenderTest(Shader_Ref shader_ref, uint VAO)
     glDrawArrays(GL_TRIANGLES, 0, 3);
 }
 
+#pragma endregion
 
+
+
+
+#include <fstream>
+#include <sstream>
+
+File::Text File::ReadFull(const char* file_name)
+{
+    std::ifstream fs(file_name);
+    if (!fs.is_open()) {
+        return {};
+    }
+
+    std::stringstream ss;
+    ss << fs.rdbuf();
+    return { ss.str() };
+}
+
+File::Text_Pair File::ReadFull(const char* file_name1, const char* file_name2)
+{
+    return std::make_pair(File::ReadFull(file_name1), File::ReadFull(file_name2));
+}
