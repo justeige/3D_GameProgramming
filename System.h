@@ -7,14 +7,14 @@
 #include "Component.h"
 #include <vector>
 
-struct System_Base {
+struct System {
 
     enum Flags : u32 {
         FL_Basic,
         FL_Optional = 1
     };
 
-    System_Base(std::vector<ID> const& types_) : types(types_) {}
+    System() {}
 
     virtual void update(float delta, Component_Base** m_components) {}
 
@@ -42,10 +42,10 @@ struct System_Base {
 
 struct System_List {
 
-    std::vector<System_Base*> m_systems;
+    std::vector<System*> m_systems;
 
-    bool add_system(System_Base& system);
-    bool remove_system(System_Base& system);
+    bool add_system(System& system);
+    bool remove_system(System& system);
     std::size_t size() const { return m_systems.size(); }
-    System_Base* operator[](u32 index) { return m_systems[index]; }
+    System* operator[](u32 index) { return m_systems[index]; }
 };

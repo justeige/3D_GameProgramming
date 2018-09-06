@@ -13,6 +13,7 @@ struct TestComponent2 : public Component<TestComponent2> {
 } label_test;
 
 void ecs_core_test();
+int  render_triangle_example();
 
 #pragma comment(lib, "opengl32.lib")
 #pragma comment(lib, "glfw3dll.lib")
@@ -21,11 +22,38 @@ void ecs_core_test();
 #include <glfw/glfw3.h>
 
 
+/// TODO refactor into its own files ~ different headers or in one?
+struct Renderable : public Component<Renderable> {
+    /// TODO fill
+};
+
+struct Render_System : public System {
+
+    Render_System() : System()
+    {
+        add_component_type(Renderable::Id);
+    }
+
+    virtual void update(float delta, Component_Base** components) override
+    {
+        /// TODO fill
+        std::cout << "update render system\n";
+    }
+};
+
 
 int main()
 {
     ecs_core_test();
 
+    int triangle_test = render_triangle_example();
+    assert(triangle_test == 0);
+
+    return EXIT_SUCCESS;
+}
+
+int render_triangle_example()
+{
     auto window = OpenGL::GlobalInit();
     if (window == nullptr) {
         return -1;
@@ -42,14 +70,18 @@ int main()
     uint VBO, VAO;
     OpenGL::CreateTestBuffer(VBO, VAO);
 
+    u64 counter = 0;
+
     while (OpenGL::IsOpen(window)) {
+        counter++;
         OpenGL::RenderTest(test_shader, VAO);
         OpenGL::PollAndSwap(window);
+
+        if (counter > 200) { break; } // a real timed solution would be better...
     }
 
     return 0;
 }
-
 
 void ecs_core_test()
 {

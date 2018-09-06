@@ -2,11 +2,16 @@
 
 #include "Common.h"
 
+#include <map>
+#include <string>
+
 
 struct GLFWwindow;
 
 using Shader_ID = int;
 const Shader_ID Bad_Shader = 0;
+
+using Uniform_Map = std::map<std::string, int>;
 
 namespace OpenGL {
 
@@ -17,7 +22,8 @@ bool        IsOpen(GLFWwindow* window);
 void        PollAndSwap(GLFWwindow* window); // poll for new events and swap the drawing buffer
 
 // shader specific
-Shader_ID  CreateShaderID(const char* vertex_path, const char* fragment_path);
+Shader_ID   CreateShaderID(const char* vertex_path, const char* fragment_path);
+Uniform_Map MapUniformLocations(Shader_ID shader_id, std::initializer_list<std::string> uniform_names);
 
 // test code for the triangle example
 void        CreateTestBuffer(uint& VBO, uint& VAO);
@@ -25,7 +31,7 @@ void        RenderTest(Shader_ID shader_ref, uint VAO);
 
 
 struct Shader {
-    Shader(Shader_ID prg) : program(prg) {}
+    Shader(Shader_ID prg, Uniform_Map u) : program(prg), uniforms(u) {}
 
     void apply() const;
 
@@ -33,12 +39,12 @@ struct Shader {
     void send_value(const char* name, int   value) const;
     void send_value(const char* name, float value) const;
 
-    const Shader_ID program;
+    const Shader_ID   program;
+    const Uniform_Map uniforms;
 };
 
 }
 
-#include <vector>
 #include <string>
 #include <optional>  // needs c++17 compiler...
 

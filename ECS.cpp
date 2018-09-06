@@ -170,7 +170,7 @@ void ECS::update_system_with_multiple(u32 index, System_List systems, float delt
             if (n == min_size_index) { continue; }
 
             component_param[n] = component_internal(entity_components, *component_arrays[n], types[n]);
-            if (component_param[n] == nullptr && (component_flags[n] & System_Base::FL_Optional) == 0) {
+            if (component_param[n] == nullptr && (component_flags[n] & System::FL_Optional) == 0) {
                 is_valid = false;
                 break;
             }
@@ -189,7 +189,7 @@ u32 ECS::find_least_common_component(std::vector<u32> const & types, std::vector
 
     for_size(n, types) {
 
-        if ((flags[n] & System_Base::FL_Optional) != 0) {
+        if ((flags[n] & System::FL_Optional) != 0) {
             continue;
         }
 

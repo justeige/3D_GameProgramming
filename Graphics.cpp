@@ -123,6 +123,18 @@ Shader_ID OpenGL::CreateShaderID(const char* vertex_path, const char* fragment_p
     return program_id;
 }
 
+Uniform_Map OpenGL::MapUniformLocations(Shader_ID shader_id, std::initializer_list<std::string> uniform_names)
+{
+    Uniform_Map mapped_Data;
+    for (auto name : uniform_names) {
+        auto location = glGetUniformLocation(shader_id, name.c_str());
+        assert(location != -1);
+        mapped_Data[name] = location;
+    }
+
+    return mapped_Data;
+}
+
 // opengl data
 namespace OpenGL {
 
@@ -133,22 +145,19 @@ void Shader::apply() const
 
 void Shader::send_value(const char* name, bool value) const
 {
-    auto location = glGetUniformLocation(program, name);
-    assert(location != -1);
+    int location = uniforms.at(name);
     glUniform1i(location, (int)value);
 }
 
 void Shader::send_value(const char* name, int value) const
 {
-    auto location = glGetUniformLocation(program, name);
-    assert(location != -1);
+    int location = uniforms.at(name);
     glUniform1i(location, value);
 }
 
 void Shader::send_value(const char* name, float value) const
 {
-    auto location = glGetUniformLocation(program, name);
-    assert(location != -1);
+    int location = uniforms.at(name);
     glUniform1f(location, value);
 }
 

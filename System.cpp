@@ -1,6 +1,6 @@
 #include "System.h"
 
-bool System_List::add_system(System_Base& system)
+bool System_List::add_system(System& system)
 {
     if (!system.is_valid()) {
         return false;
@@ -9,7 +9,7 @@ bool System_List::add_system(System_Base& system)
     return true;
 }
 
-bool System_List::remove_system(System_Base& system)
+bool System_List::remove_system(System& system)
 {
     for_size(n, m_systems) {
         if (m_systems[n] == &system) {
