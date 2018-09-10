@@ -36,6 +36,8 @@ using Bytes = std::vector<Byte>;
     obj(obj && other) = delete; \
     void operator=(obj && other) = delete;
 
+#define not_in_use(param) (param)
+
 
 // black magic macros for unique names
 // src = https://stackoverflow.com/questions/2419650/c-c-macro-template-blackmagic-to-generate-unique-name

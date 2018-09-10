@@ -32,7 +32,7 @@ uint CompileShader(const char* raw_code, GLenum type)
 #pragma endregion
 
 /// TODO do actual error reporting
-GLFWwindow* OpenGL::GlobalInit()
+GLFWwindow* GL::Global_Init()
 {
     if (glfwInit() == GL_FALSE) {
         return nullptr;
@@ -73,25 +73,38 @@ GLFWwindow* OpenGL::GlobalInit()
     return window;
 }
 
-void OpenGL::GlobalTeardown()
+void GL::Global_Teardown()
 {
     glfwTerminate();
 }
 
-bool OpenGL::IsOpen(GLFWwindow* window)
+bool GL::Is_Open(Window* window)
 {
     assert(window != nullptr);
     return !glfwWindowShouldClose(window);
 }
 
-void OpenGL::PollAndSwap(GLFWwindow* window)
+void GL::Poll_And_Swap(Window* window)
 {
     assert(window != nullptr);
     glfwPollEvents();
     glfwSwapBuffers(window);
 }
 
-Shader_ID OpenGL::CreateShaderID(const char* vertex_path, const char* fragment_path)
+void GL::Close_On_Escape(Window* window)
+{
+    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
+        glfwSetWindowShouldClose(window, true);
+    }
+}
+
+void GL::Clear_Screen()
+{
+    // wipe the drawing surface clear
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+}
+
+Shader_ID GL::Create_Shader_ID(const char* vertex_path, const char* fragment_path)
 {
     auto[vertex_code, fragment_code] = File::ReadFull(vertex_path, fragment_path);
     if (!vertex_code.has_value() || !fragment_code.has_value()) {
@@ -123,7 +136,7 @@ Shader_ID OpenGL::CreateShaderID(const char* vertex_path, const char* fragment_p
     return program_id;
 }
 
-Uniform_Map OpenGL::MapUniformLocations(Shader_ID shader_id, std::initializer_list<std::string> uniform_names)
+Uniform_Map GL::Map_Uniform_Locations(Shader_ID shader_id, std::initializer_list<std::string> uniform_names)
 {
     Uniform_Map mapped_Data;
     for (auto name : uniform_names) {
@@ -136,7 +149,7 @@ Uniform_Map OpenGL::MapUniformLocations(Shader_ID shader_id, std::initializer_li
 }
 
 // opengl data
-namespace OpenGL {
+namespace GL {
 
 void Shader::apply() const
 {
@@ -168,7 +181,7 @@ void Shader::send_value(const char* name, float value) const
 
 #pragma region "Test-Code"
 
-void OpenGL::CreateTestBuffer(uint & VBO, uint & VAO)
+void GL::Create_Test_Buffer(uint & VBO, uint & VAO)
 {
     // set up vertex data (and buffer(s)) and configure vertex attributes for a single triangle
     float vertices[] = {
@@ -196,14 +209,82 @@ void OpenGL::CreateTestBuffer(uint & VBO, uint & VAO)
     glBindVertexArray(0);
 }
 
-void OpenGL::RenderTest(Shader_ID shader_ref, uint VAO)
+void GL::Create_Cube_Buffer(uint& VBO, uint& VAO)
 {
-    // wipe the drawing surface clear
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    // buffer layout:
+    // [x y z a b][x y z a b][...]
+    // |----||---|...
+    // 3      2
+
+    const int stride = 5 * sizeof(float);
+    float cube_vertices[] = {
+        // positions          // texture
+        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+        0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
+        0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+        0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+
+        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+        0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+        0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+        0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+        -0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+
+        -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+        -0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+        -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+        0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+        0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+        0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+        0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+        0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+        0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+        0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
+        0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+        0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+
+        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+        0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+        0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+        0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+        -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
+        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
+    };
+
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
+    glBindVertexArray(VAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(cube_vertices), cube_vertices, GL_STATIC_DRAW);
+
+    // map positions to buffer
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, (void*)0);
+    glEnableVertexAttribArray(0);
+    // map texture coords to buffer
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, stride, (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+
+    glBindVertexArray(0);
+}
+
+void GL::Render_Test(Shader_ID shader_ref, uint VAO, uint size)
+{
     glUseProgram(shader_ref);
     glBindVertexArray(VAO);
     // draw points 0-3 from the currently bound VAO with current in-use shader
-    glDrawArrays(GL_TRIANGLES, 0, 3);
+    glDrawArrays(GL_TRIANGLES, 0, size);
 }
 
 #pragma endregion

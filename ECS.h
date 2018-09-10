@@ -36,8 +36,16 @@ struct ECS final {
     Entity_Handle make_entity(Component_Base** components, ID const* components_ids, std::size_t num_components);
     void remove_entity(Entity_Handle* handle);
 
+    template <class C1>
+    Entity_Handle make_entity_from(C1& c1)
+    {
+        Component_Base* components[] = { &c1 };
+        u32 ids[] = { C1::Id };
+        return make_entity(components, ids, 1);
+    }
+
     template <class C1, class C2>
-    Entity_Handle make_from(C1& c1, C2& c2)
+    Entity_Handle make_entity_from(C1& c1, C2& c2)
     {
         Component_Base* components[] = { &c1, &c2 };
         u32 ids[] = { C1::Id, C2::Id };
