@@ -24,6 +24,7 @@ using ID   = u32;
 using Byte = u8;
 using Bytes = std::vector<Byte>;
 
+using Indices = std::vector<uint>;
 
 // macros
 #define for_size(var, container) for (u32 var = 0; var < std::size(container); ++var)

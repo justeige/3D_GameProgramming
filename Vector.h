@@ -116,4 +116,5 @@ Vector<Type, Size> operator / (Vector<Type, Size> const& vec, Type const& value)
     return result;
 }
 // typedefs for easier access
+using float2 = Vector<float, 2>;
 using float3 = Vector<float, 3>;

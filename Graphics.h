@@ -1,10 +1,11 @@
 #pragma once
 
 #include "Common.h"
+#include "Vector.h"
 
 #include <map>
 #include <string>
-
+#include <vector>
 
 struct GLFWwindow;
 using Window = GLFWwindow;
@@ -16,13 +17,46 @@ using Uniform_Map = std::map<std::string, int>;
 
 namespace GL {
 
-// generel opengl
+struct Shader;
+
+// basic data structures
+struct Vertex {
+    float3 position;
+    float3 normal;
+    float2 tex_coord;
+};
+using Vertices = std::vector<Vertex>;
+
+struct Texture {
+    uint id;
+    std::string path;
+    enum Type {
+        diffuse,
+        specular,
+        normal
+    } type;
+};
+using Textures = std::vector<Texture>;
+
+// basic functions
 Window* Global_Init();     // if the init fails, the function return nullptr
 void    Global_Teardown(); // needs to be called at the end of an successfull program
 bool    Is_Open(Window* window);
 void    Poll_And_Swap(Window* window); // poll for new events and swap the drawing buffer
 void    Close_On_Escape(Window* window);
 void    Clear_Screen();
+
+
+// mesh & model specific code
+struct Mesh {
+    uint     VAO, VBO, EBO;
+    Vertices vertices;
+    Indices  indices;
+    Textures textures;
+};
+
+Mesh Allocate_Mesh(Vertices v, Indices i, Textures t);
+void Render_Mesh(Mesh const& m, Shader const& s);
 
 // shader specific
 Shader_ID   Create_Shader_ID(const char* vertex_path, const char* fragment_path);
@@ -32,7 +66,6 @@ Uniform_Map Map_Uniform_Locations(Shader_ID shader_id, std::initializer_list<std
 void Create_Test_Buffer(uint& VBO, uint& VAO);
 void Create_Cube_Buffer(uint& VBO, uint& VAO);
 void Render_Test(Shader_ID shader_ref, uint VAO, uint size);
-
 
 struct Shader {
     Shader(Shader_ID prg, Uniform_Map u) : program(prg), uniforms(u) {}

@@ -104,6 +104,60 @@ void GL::Clear_Screen()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
+GL::Mesh GL::Allocate_Mesh(Vertices v, Indices i, Textures t)
+{
+    Mesh m = {}; /*VAO, VBO and EBO will be init from opengl routines!*/
+    m.vertices = v;
+    m.indices  = i;
+    m.textures  = t;
+
+    glGenVertexArrays(1, &m.VAO);
+    glGenBuffers(1, &m.VBO);
+    glGenBuffers(1, &m.EBO);
+
+    glBindVertexArray(m.VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, m.VBO);
+    glBufferData(GL_ARRAY_BUFFER, m.vertices.size() * sizeof(Vertex), &m.vertices[0], GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m.EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, m.indices.size() * sizeof(uint), &m.indices[0], GL_STATIC_DRAW);
+
+    // vertex pos
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
+    // vertex normals
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, normal));
+    // vertex texture coords
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, tex_coord));
+
+    glBindVertexArray(0);
+    return m;
+}
+
+void GL::Render_Mesh(Mesh const& m, Shader const& s)
+{
+    s.apply();
+
+    //for (unsigned int i = 0; i < m.textures.size(); i++) {
+    //    glActiveTexture(GL_TEXTURE0 + i); // active proper texture unit before binding
+    //
+    //    /// find uniform in shader
+    //
+    //    // bind the texture
+    //    glBindTexture(GL_TEXTURE_2D, m.textures[i].id);
+    //}
+
+    // draw mesh
+    glBindVertexArray(m.VAO);
+    glDrawElements(GL_TRIANGLES, m.indices.size(), GL_UNSIGNED_INT, 0);
+    glBindVertexArray(0);
+
+    // set everything back to defaults
+    glActiveTexture(GL_TEXTURE0);
+}
+
 Shader_ID GL::Create_Shader_ID(const char* vertex_path, const char* fragment_path)
 {
     auto[vertex_code, fragment_code] = File::ReadFull(vertex_path, fragment_path);
