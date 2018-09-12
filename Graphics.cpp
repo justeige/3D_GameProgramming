@@ -4,6 +4,7 @@
 
 #include <glad/glad.h>
 #include <glfw/glfw3.h>
+#include <stb/stb_image.h>
 
 #pragma region "Module-Internal"
 
@@ -102,6 +103,37 @@ void GL::Clear_Screen()
 {
     // wipe the drawing surface clear
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+}
+
+std::optional<GL::Texture> GL::Allocate_Texture(std::string const& file_path)
+{
+    // try loading the texture first, no point in allocating any buffer on the gpu otherwise!
+    int x, y, channels;
+    uchar* image_data = stbi_load(file_path.c_str(), &x, &y, &channels, 0);
+    if (image_data == nullptr) {
+        return {}; /// TODO maybe return an error also?
+    }
+    ON_EXIT(stbi_image_free(image_data));
+
+    // image should be loaded, now allocate buffer
+    uint texture_id;
+    glGenTextures(1, &texture_id);
+    glBindTexture(GL_TEXTURE_2D, texture_id);
+    // set the texture wrapping parameters
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);   // set texture wrapping to GL_REPEAT (default wrapping method)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    // set texture filtering parameters
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, x, y, 0, GL_RGB, GL_UNSIGNED_BYTE, image_data);
+    glGenerateMipmap(GL_TEXTURE_2D);
+
+    GL::Texture t = {};
+    t.id = texture_id;
+    t.type = GL::Texture::normal;
+    t.path = file_path;
+    return t;
 }
 
 GL::Mesh GL::Allocate_Mesh(Vertices v, Indices i, Textures t)

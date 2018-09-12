@@ -19,6 +19,8 @@ using u64 = uint64_t;
 using i32 = int32_t;
 using i64 = int64_t;
 
+using uchar = unsigned char;
+
 using ID   = u32;
 
 using Byte = u8;

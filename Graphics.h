@@ -6,6 +6,7 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <optional>
 
 struct GLFWwindow;
 using Window = GLFWwindow;
@@ -27,6 +28,15 @@ struct Vertex {
 };
 using Vertices = std::vector<Vertex>;
 
+// basic functions
+Window* Global_Init();     // if the init fails, the function return nullptr
+void    Global_Teardown(); // needs to be called at the end of an successfull program
+bool    Is_Open(Window* window);
+void    Poll_And_Swap(Window* window); // poll for new events and swap the drawing buffer
+void    Close_On_Escape(Window* window);
+void    Clear_Screen();
+
+// texture specific functions
 struct Texture {
     uint id;
     std::string path;
@@ -38,14 +48,7 @@ struct Texture {
 };
 using Textures = std::vector<Texture>;
 
-// basic functions
-Window* Global_Init();     // if the init fails, the function return nullptr
-void    Global_Teardown(); // needs to be called at the end of an successfull program
-bool    Is_Open(Window* window);
-void    Poll_And_Swap(Window* window); // poll for new events and swap the drawing buffer
-void    Close_On_Escape(Window* window);
-void    Clear_Screen();
-
+std::optional<Texture> Allocate_Texture(std::string const& file_path);
 
 // mesh & model specific code
 struct Mesh {

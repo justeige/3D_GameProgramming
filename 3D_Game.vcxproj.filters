@@ -7,6 +7,7 @@
     <ClCompile Include="System.cpp" />
     <ClCompile Include="glad.c" />
     <ClCompile Include="Graphics.cpp" />
+    <ClCompile Include="stb.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Common.h" />
