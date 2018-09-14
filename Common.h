@@ -56,4 +56,4 @@ struct Deferred_Action {
     ~Deferred_Action() { action(); }
     Action action;
 };
-#define ON_EXIT(action) Deferred_Action MAKE_UNIQUE_NAME(deferred_action_)([&](){action;})
+#define on_exit(action) Deferred_Action MAKE_UNIQUE_NAME(deferred_action_)([&](){action;})

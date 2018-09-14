@@ -1,41 +1,56 @@
 #include "Graphics.h"
+#include "File.h"
 
 #include <array>
+#include <iostream>
 
 #include <glad/glad.h>
 #include <glfw/glfw3.h>
 #include <stb/stb_image.h>
 
-#pragma region "Module-Internal"
 
-// callbacks
-auto framebuffer_size_callback = [](GLFWwindow* window, int width, int height)
+// ---------------------------------------------
+// module internal code - forward decl.
+// ---------------------------------------------
+void Report_Error(uint id, std::string const& text);
+uint Compile_Shader(const char* raw_code, GLenum type);
+Shader_ID Link_Shader(uint vertex_shader, uint fragment_shader);
+
+
+// ---------------------------------------------
+// basic functions
+// ---------------------------------------------
+Shader_ID GL::Create_Shader_Program(const char* vertex_path, const char* fragment_path)
 {
-    glViewport(0, 0, width, height);
-};
+    auto[vertex_code, fragment_code] = File::ReadFull(vertex_path, fragment_path);
+    uint vertex_shader = Compile_Shader(vertex_code.value().c_str(), GL_VERTEX_SHADER);
+    uint fragment_shader = Compile_Shader(fragment_code.value().c_str(), GL_FRAGMENT_SHADER);
+    Shader_ID program_id = Link_Shader(vertex_shader, fragment_shader);
 
-uint CompileShader(const char* raw_code, GLenum type)
-{
-    std::array<char, 512> info = {};
+    glDeleteShader(vertex_shader);
+    glDeleteShader(fragment_shader);
 
-    uint shader_ref = glCreateShader(type);
-    glShaderSource(shader_ref, 1, &raw_code, NULL);
-    glCompileShader(shader_ref);
-    int success;
-    glGetShaderiv(shader_ref, GL_COMPILE_STATUS, &success);
-    if (!success) {
-        glGetShaderInfoLog(shader_ref, info.size(), nullptr, info.data());
-        /// TODO error handling!!!
-    }
-    return shader_ref;
+    return program_id;
 }
 
-#pragma endregion
+Uniform_Map GL::Map_Uniform_Locations(Shader_ID shader_id, std::initializer_list<std::string> uniform_names)
+{
+    Uniform_Map mapped_Data;
+    for (auto name : uniform_names) {
+        auto location = glGetUniformLocation(shader_id, name.c_str());
+        assert(location != -1);
+        mapped_Data[name] = location;
+    }
 
-/// TODO do actual error reporting
-GLFWwindow* GL::Global_Init()
+    return mapped_Data;
+}
+
+
+Window* GL::Global_Init()
 {
     if (glfwInit() == GL_FALSE) {
+        std::cerr << "Failed to init GLFW\n";
+        assert(false);
         return nullptr;
     }
 
@@ -46,8 +61,10 @@ GLFWwindow* GL::Global_Init()
 
     // create the window and make it the context
     int width = 800, height = 600;
-    GLFWwindow* window = glfwCreateWindow(width, height, "3D_Game", NULL, NULL);
-    if (window == nullptr) {
+    Window* window = glfwCreateWindow(width, height, "3D_Game", NULL, NULL);
+    if (!window) {
+        std::cerr << "Failed to create a window\n";
+        assert(false);
         return nullptr;
     }
     glfwMakeContextCurrent(window);
@@ -58,19 +75,14 @@ GLFWwindow* GL::Global_Init()
     // ----------------------------------------------------------------
 
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-        // "Failed to initialize GLAD"
+        std::cerr << "Failed to initialize GLAD\n";
+        assert(false);
         return nullptr;
     }
 
     // tell GL to only draw onto a pixel if the shape is closer to the viewer
     glEnable(GL_DEPTH_TEST); // enable depth-testing
     glDepthFunc(GL_LESS);    // depth-testing interprets a smaller value as "closer"
-
-    // gets called if the window is resized
-    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-
-
-
     return window;
 }
 
@@ -105,15 +117,10 @@ void GL::Clear_Screen()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
-std::optional<GL::Texture> GL::Allocate_Texture(std::string const& file_path)
+GL::Texture GL::Allocate_Texture(std::string const& file_path)
 {
     // try loading the texture first, no point in allocating any buffer on the gpu otherwise!
-    int x, y, channels;
-    uchar* image_data = stbi_load(file_path.c_str(), &x, &y, &channels, 0);
-    if (image_data == nullptr) {
-        return {}; /// TODO maybe return an error also?
-    }
-    ON_EXIT(stbi_image_free(image_data));
+    Image image(file_path.c_str());
 
     // image should be loaded, now allocate buffer
     uint texture_id;
@@ -126,7 +133,7 @@ std::optional<GL::Texture> GL::Allocate_Texture(std::string const& file_path)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, x, y, 0, GL_RGB, GL_UNSIGNED_BYTE, image_data);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, image.x, image.y, 0, GL_RGB, GL_UNSIGNED_BYTE, image.data);
     glGenerateMipmap(GL_TEXTURE_2D);
 
     GL::Texture t = {};
@@ -138,21 +145,21 @@ std::optional<GL::Texture> GL::Allocate_Texture(std::string const& file_path)
 
 GL::Mesh GL::Allocate_Mesh(Vertices v, Indices i, Textures t)
 {
-    Mesh m = {}; /*VAO, VBO and EBO will be init from opengl routines!*/
-    m.vertices = v;
-    m.indices  = i;
-    m.textures  = t;
+    Mesh mesh = {}; /*VAO, VBO and EBO will be init from opengl routines!*/
+    mesh.vertices = v;
+    mesh.indices  = i;
+    mesh.textures  = t;
 
-    glGenVertexArrays(1, &m.VAO);
-    glGenBuffers(1, &m.VBO);
-    glGenBuffers(1, &m.EBO);
+    glGenVertexArrays(1, &mesh.VAO);
+    glGenBuffers(1, &mesh.VBO);
+    glGenBuffers(1, &mesh.EBO);
 
-    glBindVertexArray(m.VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, m.VBO);
-    glBufferData(GL_ARRAY_BUFFER, m.vertices.size() * sizeof(Vertex), &m.vertices[0], GL_STATIC_DRAW);
+    glBindVertexArray(mesh.VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, mesh.VBO);
+    glBufferData(GL_ARRAY_BUFFER, mesh.vertices.size() * sizeof(Vertex), &mesh.vertices[0], GL_STATIC_DRAW);
 
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m.EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, m.indices.size() * sizeof(uint), &m.indices[0], GL_STATIC_DRAW);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, mesh.indices.size() * sizeof(uint), &mesh.indices[0], GL_STATIC_DRAW);
 
     // vertex pos
     glEnableVertexAttribArray(0);
@@ -165,7 +172,7 @@ GL::Mesh GL::Allocate_Mesh(Vertices v, Indices i, Textures t)
     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, tex_coord));
 
     glBindVertexArray(0);
-    return m;
+    return mesh;
 }
 
 void GL::Render_Mesh(Mesh const& m, Shader const& s)
@@ -190,81 +197,64 @@ void GL::Render_Mesh(Mesh const& m, Shader const& s)
     glActiveTexture(GL_TEXTURE0);
 }
 
-Shader_ID GL::Create_Shader_ID(const char* vertex_path, const char* fragment_path)
+// ---------------------------------------------
+// shader code
+// ---------------------------------------------
+#pragma region "Shader"
+GL::Shader::Shader(const char* vertex_path, const char* fragment_path, Uniform_List uniform_names)
 {
-    auto[vertex_code, fragment_code] = File::ReadFull(vertex_path, fragment_path);
-    if (!vertex_code.has_value() || !fragment_code.has_value()) {
-        /// TODO error handling!!!
-        assert(false);
-        return Bad_Shader;
-    }
-
-    uint vertex_shader   = CompileShader(vertex_code.value().c_str(),   GL_VERTEX_SHADER);
-    uint fragment_shader = CompileShader(fragment_code.value().c_str(), GL_FRAGMENT_SHADER);
-
-    Shader_ID program_id = glCreateProgram();
-    glAttachShader(program_id, vertex_shader);
-    glAttachShader(program_id, fragment_shader);
-    glLinkProgram(program_id);
-
-    std::array<char, 512> info = {};
-    int success;
-    glGetProgramiv(program_id, GL_LINK_STATUS, &success);
-    if (!success) {
-        glGetProgramInfoLog(program_id, info.size(), nullptr, info.data());
-        /// TODO error handling!!!
-        return Bad_Shader;
-    }
-
-    // shaders should be linked to the program and are no longer needed
-    glDeleteShader(vertex_shader);
-    glDeleteShader(fragment_shader);
-    return program_id;
+    program_id = GL::Create_Shader_Program(vertex_path, fragment_path);
+    uniforms = GL::Map_Uniform_Locations(program_id, uniform_names);
 }
 
-Uniform_Map GL::Map_Uniform_Locations(Shader_ID shader_id, std::initializer_list<std::string> uniform_names)
+void GL::Shader::apply() const
 {
-    Uniform_Map mapped_Data;
-    for (auto name : uniform_names) {
-        auto location = glGetUniformLocation(shader_id, name.c_str());
-        assert(location != -1);
-        mapped_Data[name] = location;
-    }
-
-    return mapped_Data;
+    glUseProgram(program_id);
 }
 
-// opengl data
-namespace GL {
-
-void Shader::apply() const
-{
-    glUseProgram(program);
-}
-
-void Shader::send_value(const char* name, bool value) const
+void GL::Shader::send_value(const char* name, bool value) const
 {
     int location = uniforms.at(name);
     glUniform1i(location, (int)value);
 }
 
-void Shader::send_value(const char* name, int value) const
+void GL::Shader::send_value(const char* name, int value) const
 {
     int location = uniforms.at(name);
     glUniform1i(location, value);
 }
 
-void Shader::send_value(const char* name, float value) const
+void GL::Shader::send_value(const char* name, float value) const
 {
     int location = uniforms.at(name);
     glUniform1f(location, value);
 }
+#pragma endregion
 
+// ---------------------------------------------
+// image code
+// ---------------------------------------------
+#pragma region "Image"
+GL::Image::~Image()
+{
+    if (data) {
+        stbi_image_free(data);
+    }
 }
 
+GL::Image::Image(const char* file_name)
+{
+    data = stbi_load(file_name, &x, &y, &channels, 0);
+    if (data != nullptr) { return; }
 
+    std::cerr << "Failed to load image " << file_name << '\n';
+    assert(false);
+}
+#pragma endregion
 
-
+// ---------------------------------------------
+// test code
+// ---------------------------------------------
 #pragma region "Test-Code"
 
 void GL::Create_Test_Buffer(uint & VBO, uint & VAO)
@@ -365,9 +355,9 @@ void GL::Create_Cube_Buffer(uint& VBO, uint& VAO)
     glBindVertexArray(0);
 }
 
-void GL::Render_Test(Shader_ID shader_ref, uint VAO, uint size)
+void GL::Render_Test(Shader& shader, uint VAO, uint size)
 {
-    glUseProgram(shader_ref);
+    shader.apply();
     glBindVertexArray(VAO);
     // draw points 0-3 from the currently bound VAO with current in-use shader
     glDrawArrays(GL_TRIANGLES, 0, size);
@@ -375,25 +365,48 @@ void GL::Render_Test(Shader_ID shader_ref, uint VAO, uint size)
 
 #pragma endregion
 
+// ---------------------------------------------
+// module internal code
+// ---------------------------------------------
+#pragma region "Module internal"
 
-
-
-#include <fstream>
-#include <sstream>
-
-File::Text File::ReadFull(const char* file_name)
+void Report_Error(uint id, std::string const& text)
 {
-    std::ifstream fs(file_name);
-    if (!fs.is_open()) {
-        return {};
+    std::array<char, 512> info = {};
+    glGetShaderInfoLog(id, info.size(), nullptr, info.data());
+    std::cerr << text << '\n';
+    std::cerr << info.data() << '\n';
+    assert(false);
+}
+
+uint Compile_Shader(const char* raw_code, GLenum type)
+{
+    uint shader_ref = glCreateShader(type);
+    glShaderSource(shader_ref, 1, &raw_code, NULL);
+    glCompileShader(shader_ref);
+    int success;
+    glGetShaderiv(shader_ref, GL_COMPILE_STATUS, &success);
+    if (!success) {
+        Report_Error(shader_ref, "Failed to compile shader with:");
+    }
+    return shader_ref;
+}
+
+Shader_ID Link_Shader(uint vertex_shader, uint fragment_shader)
+{
+    Shader_ID program_id = glCreateProgram();
+    glAttachShader(program_id, vertex_shader);
+    glAttachShader(program_id, fragment_shader);
+    glLinkProgram(program_id);
+
+    int success;
+    glGetProgramiv(program_id, GL_LINK_STATUS, &success);
+    if (!success) {
+        Report_Error(program_id, "Failed to link shader program with:");
+        return Bad_Shader;
     }
 
-    std::stringstream ss;
-    ss << fs.rdbuf();
-    return { ss.str() };
+    return program_id;
 }
 
-File::Text_Pair File::ReadFull(const char* file_name1, const char* file_name2)
-{
-    return std::make_pair(File::ReadFull(file_name1), File::ReadFull(file_name2));
-}
+#pragma endregion

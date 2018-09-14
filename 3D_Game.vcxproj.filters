@@ -8,6 +8,7 @@
     <ClCompile Include="glad.c" />
     <ClCompile Include="Graphics.cpp" />
     <ClCompile Include="stb.cpp" />
+    <ClCompile Include="File.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Common.h" />
@@ -16,5 +17,6 @@
     <ClInclude Include="ECS.h" />
     <ClInclude Include="Vector.h" />
     <ClInclude Include="Graphics.h" />
+    <ClInclude Include="File.h" />
   </ItemGroup>
 </Project>

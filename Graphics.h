@@ -15,6 +15,7 @@ using Shader_ID = int;
 const Shader_ID Bad_Shader = 0;
 
 using Uniform_Map = std::map<std::string, int>;
+using Uniform_List = std::initializer_list<std::string>;
 
 namespace GL {
 
@@ -48,7 +49,18 @@ struct Texture {
 };
 using Textures = std::vector<Texture>;
 
-std::optional<Texture> Allocate_Texture(std::string const& file_path);
+Texture Allocate_Texture(std::string const& file_path);
+
+struct Image {
+
+    Image(const char* file_path);
+    ~Image();
+
+    uchar* data = nullptr;
+    int x = 0;
+    int y = 0;
+    int channels = 0;
+};;
 
 // mesh & model specific code
 struct Mesh {
@@ -62,16 +74,21 @@ Mesh Allocate_Mesh(Vertices v, Indices i, Textures t);
 void Render_Mesh(Mesh const& m, Shader const& s);
 
 // shader specific
-Shader_ID   Create_Shader_ID(const char* vertex_path, const char* fragment_path);
-Uniform_Map Map_Uniform_Locations(Shader_ID shader_id, std::initializer_list<std::string> uniform_names);
+Shader_ID   Create_Shader_Program(const char* vertex_path, const char* fragment_path);
+Uniform_Map Map_Uniform_Locations(Shader_ID shader_id, Uniform_List uniforms);
 
 // test code for the triangle example
 void Create_Test_Buffer(uint& VBO, uint& VAO);
 void Create_Cube_Buffer(uint& VBO, uint& VAO);
-void Render_Test(Shader_ID shader_ref, uint VAO, uint size);
+void Render_Test(Shader& shader, uint VAO, uint size);
 
 struct Shader {
-    Shader(Shader_ID prg, Uniform_Map u) : program(prg), uniforms(u) {}
+
+    // create from external values
+    Shader(Shader_ID prg, Uniform_Map u) : program_id(prg), uniforms(u) {}
+
+    // create from files
+    Shader(const char* vertex_path, const char* fragment_path, Uniform_List uniform_names);
 
     void apply() const;
 
@@ -79,22 +96,7 @@ struct Shader {
     void send_value(const char* name, int   value) const;
     void send_value(const char* name, float value) const;
 
-    const Shader_ID   program;
-    const Uniform_Map uniforms;
+    Shader_ID   program_id;
+    Uniform_Map uniforms;
 };
-
-}
-
-#include <string>
-#include <optional>  // needs c++17 compiler...
-
-/// TODO move into file specific module (if any such file emerges!)
-namespace File {
-
-using Text  = std::optional<std::string>;
-using Text_Pair = std::pair<Text, Text>;
-
-Text      ReadFull(const char* file_name);
-Text_Pair ReadFull(const char* file_name1, const char* file_name2);
-
 }
