@@ -34,6 +34,7 @@
     <ClInclude Include="ECS.h" />
     <ClInclude Include="File.h" />
     <ClInclude Include="Graphics.h" />
+    <ClInclude Include="Matrix.h" />
     <ClInclude Include="System.h" />
     <ClInclude Include="Vector.h" />
   </ItemGroup>

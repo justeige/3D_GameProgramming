@@ -1,5 +1,6 @@
 #include "Common.h"
 #include "Vector.h"
+#include "Matrix.h"
 #include "Graphics.h"
 
 #include <iostream>
@@ -8,6 +9,7 @@
 #pragma comment(lib, "opengl32.lib")
 #pragma comment(lib, "glfw3dll.lib")
 
+float44 mat;
 
 int main()
 {

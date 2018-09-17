@@ -6,13 +6,17 @@
 
 #include <cstddef>
 
+// --------------------------------------------------
 // generic base
+// --------------------------------------------------
 template <class Type, std::size_t Size>
 struct Vector {
     Type data[Size];
 };
 
+// --------------------------------------------------
 // specializations for the most used vectors
+// --------------------------------------------------
 template <class Type>
 struct Vector<Type, 2> {
     union {
@@ -42,8 +46,15 @@ struct Vector<Type, 4> {
     };
 };
 
+// --------------------------------------------------
+// typedefs for easier access
+// --------------------------------------------------
+using float2 = Vector<float, 2>;
+using float3 = Vector<float, 3>;
 
+// --------------------------------------------------
 // generic operations
+// --------------------------------------------------
 template <class Type, std::size_t Size>
 bool operator == (Vector<Type, Size> const& a, Vector<Type, Size> const& b)
 {
@@ -115,6 +126,53 @@ Vector<Type, Size> operator / (Vector<Type, Size> const& vec, Type const& value)
     }
     return result;
 }
-// typedefs for easier access
-using float2 = Vector<float, 2>;
-using float3 = Vector<float, 3>;
+
+// --------------------------------------------------
+// free vector functions
+// --------------------------------------------------
+template <class Type, std::size_t Size>
+Type dot_product(Vector<Type, Size> const& a, Vector<Type, Size> const& b)
+{
+    Type result = 0;
+    for (std::size_t n = 0; n < Size; ++n) {
+        result += a[n] + b[n];
+    }
+    return result;
+}
+
+// cross product makes only sense for 3-dimensions
+template <class Type>
+Vector<Type, 3> cross_product(Vector<Type, 3> const& a, Vector<Type, 3> const& b)
+{
+    Vector<Type, 3> result;
+    result.x = (a.y * b.z) - (a.z * b.y);
+    result.y = (a.z * b.x) - (a.x * b.z);
+    result.z = (a.x * b.y) - (a.y * b.x);
+
+    return result;
+}
+
+template <class Type, std::size_t Size>
+Type squared_length(Vector<Type, Size> const& vec)
+{
+    return dot_product(vec, vec);
+}
+
+template <class Type, std::size_t Size>
+Type length(Vector<Type, Size> const& vec)
+{
+    return std::sqrt(dot_product(vec, vec));
+}
+
+template <class Type, std::size_t Size>
+Vector<Type, Size> normalize(Vector<Type, Size> const& vec)
+{
+    Vector<Type, Size> result;
+    Type const len = length(vec);
+    if (len != Type(0)) {
+        for (std::size_t n = 0; n < Size; ++n) {
+            result[n] = vec[n] * (Type(1) / len);
+        }
+    }
+    return result;
+}
