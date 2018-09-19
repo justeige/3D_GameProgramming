@@ -20,7 +20,7 @@ int main()
     }
     on_exit(GL::Global_Teardown());
 
-    GL::Shader test_shader("shader/test.vertex", "shader/test.fragment", {});
+    GL::Shader test_shader("shader/test.vertex", "shader/test.fragment", {"offset"});
 
     uint VBO, VAO;
     GL::Create_Cube_Buffer(VBO, VAO);

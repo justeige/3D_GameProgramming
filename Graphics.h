@@ -92,9 +92,10 @@ struct Shader {
 
     void apply() const;
 
-    void send_value(const char* name, bool  value) const;
-    void send_value(const char* name, int   value) const;
-    void send_value(const char* name, float value) const;
+    void send_value(const char* name, bool   value) const;
+    void send_value(const char* name, int    value) const;
+    void send_value(const char* name, float  value) const;
+    void send_value(const char* name, float3 value) const;
 
     Shader_ID   program_id;
     Uniform_Map uniforms;

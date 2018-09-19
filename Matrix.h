@@ -32,6 +32,9 @@ struct Matrix<Type, 4, 4> {
     Type data[4][4];
 };
 
+// typedefs for easier access
+using float44 = Matrix<float, 4, 4>;
+
 // generic operations
 template <class Type, std::size_t Rows, std::size_t Cols>
 bool operator == (Matrix<Type, Rows, Cols> const& a, Matrix<Type, Rows, Cols> const& b)
@@ -83,6 +86,10 @@ Matrix<Type, Rows, Cols> operator - (Matrix<Type, Rows, Cols> const& a, Matrix<T
     return result;
 }
 
+// --------------------------------------------------
+// matix & scalar operations
+// --------------------------------------------------
+
 template <class Type, std::size_t Rows, std::size_t Cols>
 Matrix<Type, Rows, Cols> operator * (Matrix<Type, Rows, Cols> const& mat, Type const& value)
 {
@@ -119,5 +126,67 @@ Matrix<Type, Rows, Cols> operator / (Matrix<Type, Rows, Cols> const& mat, Type c
     return result;
 }
 
-// typedefs for easier access
-using float44 = Matrix<float, 4, 4>;
+template <class Type, std::size_t Rows, std::size_t Cols>
+Matrix<Type, Rows, Cols> operator + (Matrix<Type, Rows, Cols> const& mat, Type const& value)
+{
+    Matrix<Type, Size> result;
+    for (std::size_t row = 0; row < Rows; ++row) {
+        for (std::size_t col = 0; col < Cols; ++col) {
+            result.data[row][col] = mat.data[row][col] + value;
+        }
+    }
+    return result;
+}
+
+template <class Type, std::size_t Rows, std::size_t Cols>
+Matrix<Type, Rows, Cols> operator + (Type const& value, Matrix<Type, Rows, Cols> const& mat)
+{
+    Matrix<Type, Size> result;
+    for (std::size_t row = 0; row < Rows; ++row) {
+        for (std::size_t col = 0; col < Cols; ++col) {
+            result.data[row][col] = mat.data[row][col] + value;
+        }
+    }
+    return result;
+}
+
+template <class Type, std::size_t Rows, std::size_t Cols>
+Matrix<Type, Rows, Cols> operator - (Matrix<Type, Rows, Cols> const& mat, Type const& value)
+{
+    Matrix<Type, Size> result;
+    for (std::size_t row = 0; row < Rows; ++row) {
+        for (std::size_t col = 0; col < Cols; ++col) {
+            result.data[row][col] = mat.data[row][col] - value;
+        }
+    }
+    return result;
+}
+
+template <class Type, std::size_t Rows, std::size_t Cols>
+Matrix<Type, Rows, Cols> operator - (Type const& value, Matrix<Type, Rows, Cols> const& mat)
+{
+    Matrix<Type, Size> result;
+    for (std::size_t row = 0; row < Rows; ++row) {
+        for (std::size_t col = 0; col < Cols; ++col) {
+            result.data[row][col] = mat.data[row][col] - value;
+        }
+    }
+    return result;
+}
+
+// --------------------------------------------------
+// free matrix functions
+// --------------------------------------------------
+
+template <class Type, std::size_t Rows, std::size_t Cols>
+Matrix<Type, Rows, Cols> identity()
+{
+    Matrix<Type, Size> result;
+    for (std::size_t row = 0; row < Rows; ++row) {
+        for (std::size_t col = 0; col < Cols; ++col) {
+            const bool is_diagonal = row == col;
+            mat[row][col] = is_diagonal ? 1 : 0;
+        }
+    }
+    return result;
+}

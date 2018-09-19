@@ -229,6 +229,13 @@ void GL::Shader::send_value(const char* name, float value) const
     int location = uniforms.at(name);
     glUniform1f(location, value);
 }
+
+void GL::Shader::send_value(const char* name, float3 value) const
+{
+    int location = uniforms.at(name);
+    glUniform3fv(location, 1, value.data);
+}
+
 #pragma endregion
 
 // ---------------------------------------------
@@ -357,6 +364,7 @@ void GL::Create_Cube_Buffer(uint& VBO, uint& VAO)
 
 void GL::Render_Test(Shader& shader, uint VAO, uint size)
 {
+    shader.send_value("offset", float3(0.5f, 0.5f, 0.f));
     shader.apply();
     glBindVertexArray(VAO);
     // draw points 0-3 from the currently bound VAO with current in-use shader
