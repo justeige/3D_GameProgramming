@@ -30,6 +30,7 @@
     <ClInclude Include="File.h" />
     <ClInclude Include="Graphics.h" />
     <ClInclude Include="Matrix.h" />
+    <ClInclude Include="Profiling.h" />
     <ClInclude Include="Vector.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

@@ -46,7 +46,7 @@ using Indices = std::vector<uint>;
 // src = https://stackoverflow.com/questions/2419650/c-c-macro-template-blackmagic-to-generate-unique-name
 #define CONCATENATE_DETAIL(x, y) x##y
 #define CONCATENATE(x, y) CONCATENATE_DETAIL(x, y)
-#define MAKE_UNIQUE_NAME(x) CONCATENATE(x, __COUNTER__)
+#define make_unique_name(x) CONCATENATE(x, __COUNTER__)
 
 
 /// TODO move into own header if needed elsewhere
@@ -56,4 +56,4 @@ struct Deferred_Action {
     ~Deferred_Action() { action(); }
     Action action;
 };
-#define on_exit(action) Deferred_Action MAKE_UNIQUE_NAME(deferred_action_)([&](){action;})
+#define on_exit(action) Deferred_Action make_unique_name(deferred_action_)([&](){action;})

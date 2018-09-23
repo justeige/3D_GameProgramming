@@ -1,8 +1,10 @@
 #include "Graphics.h"
 #include "File.h"
+#include "Profiling.h"
 
 #include <array>
 #include <iostream>
+#include <unordered_map>
 
 #include <glad/glad.h>
 #include <glfw/glfw3.h>
@@ -22,6 +24,8 @@ Shader_ID Link_Shader(uint vertex_shader, uint fragment_shader);
 // ---------------------------------------------
 Shader_ID GL::Create_Shader_Program(const char* vertex_path, const char* fragment_path)
 {
+    measure_time();
+
     auto[vertex_code, fragment_code] = File::ReadFull(vertex_path, fragment_path);
     uint vertex_shader = Compile_Shader(vertex_code.value().c_str(), GL_VERTEX_SHADER);
     uint fragment_shader = Compile_Shader(fragment_code.value().c_str(), GL_FRAGMENT_SHADER);
@@ -35,6 +39,8 @@ Shader_ID GL::Create_Shader_Program(const char* vertex_path, const char* fragmen
 
 Uniform_Map GL::Map_Uniform_Locations(Shader_ID shader_id, std::initializer_list<std::string> uniform_names)
 {
+    measure_time();
+
     Uniform_Map mapped_Data;
     for (auto name : uniform_names) {
         auto location = glGetUniformLocation(shader_id, name.c_str());
@@ -45,9 +51,10 @@ Uniform_Map GL::Map_Uniform_Locations(Shader_ID shader_id, std::initializer_list
     return mapped_Data;
 }
 
-
 Window* GL::Global_Init()
 {
+    measure_time();
+
     if (glfwInit() == GL_FALSE) {
         std::cerr << "Failed to init GLFW\n";
         assert(false);
@@ -242,20 +249,29 @@ void GL::Shader::send_value(const char* name, float3 value) const
 // image code
 // ---------------------------------------------
 #pragma region "Image"
+GL::Image::Image(const char* file_name)
+{
+    // check image cache first
+    static std::unordered_map<const char*, uchar*> image_cache {};
+    if (image_cache.count(file_name) > 0) {
+        data = image_cache.at(file_name);
+        return;
+    }
+
+    // first time this image is loaded
+    data = stbi_load(file_name, &x, &y, &channels, 0);
+    if (data != nullptr) { return; }
+
+    // something went wrong - file name changed perhaps?
+    std::cerr << "Failed to load image " << file_name << '\n';
+    assert(false);
+}
+
 GL::Image::~Image()
 {
     if (data) {
         stbi_image_free(data);
     }
-}
-
-GL::Image::Image(const char* file_name)
-{
-    data = stbi_load(file_name, &x, &y, &channels, 0);
-    if (data != nullptr) { return; }
-
-    std::cerr << "Failed to load image " << file_name << '\n';
-    assert(false);
 }
 #pragma endregion
 
@@ -294,6 +310,8 @@ void GL::Create_Test_Buffer(uint & VBO, uint & VAO)
 
 void GL::Create_Cube_Buffer(uint& VBO, uint& VAO)
 {
+    measure_time();
+
     // buffer layout:
     // [x y z a b][x y z a b][...]
     // |----||---|...

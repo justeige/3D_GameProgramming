@@ -13,5 +13,6 @@
     <ClInclude Include="Graphics.h" />
     <ClInclude Include="File.h" />
     <ClInclude Include="Matrix.h" />
+    <ClInclude Include="Profiling.h" />
   </ItemGroup>
 </Project>

@@ -34,7 +34,7 @@ int main()
         GL::Render_Test(test_shader, VAO, 36);
         GL::Poll_And_Swap(window);
 
-        if (counter > 200) { break; } // a real timed solution would be better...
+        if (counter > 2000) { break; } // a real timed solution would be better...
     }
 
 
