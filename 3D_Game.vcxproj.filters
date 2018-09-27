@@ -6,6 +6,7 @@
     <ClCompile Include="Graphics.cpp" />
     <ClCompile Include="stb.cpp" />
     <ClCompile Include="File.cpp" />
+    <ClCompile Include="Model.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Common.h" />
@@ -14,5 +15,6 @@
     <ClInclude Include="File.h" />
     <ClInclude Include="Matrix.h" />
     <ClInclude Include="Profiling.h" />
+    <ClInclude Include="Model.h" />
   </ItemGroup>
 </Project>

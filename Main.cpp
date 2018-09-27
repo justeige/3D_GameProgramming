@@ -2,6 +2,7 @@
 #include "Vector.h"
 #include "Matrix.h"
 #include "Graphics.h"
+#include "Model.h"
 
 #include <iostream>
 
@@ -13,6 +14,9 @@ float44 mat;
 
 int main()
 {
+    /// test the model loading
+    auto obj = Model::LoadOBJ("test.blend");
+
     // try and create the opengl context/window
     auto window = GL::Global_Init();
     if (!window) {

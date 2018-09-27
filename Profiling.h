@@ -26,7 +26,13 @@ struct Scope_Timer {
 
         auto end = Clock::now();
         auto duration_in_ms = duration_cast<milliseconds>(end - start).count();
-        std::cout << function_name << ": " << duration_in_ms << " ms\n";
+        if (duration_in_ms != 0) {
+            std::cout << function_name << ": " << duration_in_ms << " ms\n";
+            return;
+        }
+
+        auto duration_in_ns = duration_cast<nanoseconds>(end - start).count();
+        std::cout << function_name << ": 0." << duration_in_ns << " ms\n";
     }
 
     no_copy_and_assign(Scope_Timer);
