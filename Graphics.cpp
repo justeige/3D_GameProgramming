@@ -380,9 +380,9 @@ void GL::Create_Cube_Buffer(uint& VBO, uint& VAO)
     glBindVertexArray(0);
 }
 
-void GL::Render_Test(Shader& shader, uint VAO, uint size)
+void GL::Render_Test(Shader& shader, uint VAO, uint size, float3 pos)
 {
-    shader.send_value("offset", float3(0.5f, 0.5f, 0.f));
+    shader.send_value("offset", pos);
     shader.apply();
     glBindVertexArray(VAO);
     // draw points 0-3 from the currently bound VAO with current in-use shader

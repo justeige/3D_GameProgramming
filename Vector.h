@@ -98,6 +98,26 @@ Vector<Type, Size> operator - (Vector<Type, Size> const& a, Vector<Type, Size> c
 }
 
 template <class Type, std::size_t Size>
+Vector<Type, Size> operator += (Vector<Type, Size> const& a, Vector<Type, Size> const& b)
+{
+    Vector<Type, Size> result;
+    for (std::size_t n = 0; n < Size; ++n) {
+        result.data[n] = a.data[n] + b.data[n];
+    }
+    return result;
+}
+
+template <class Type, std::size_t Size>
+Vector<Type, Size> operator -= (Vector<Type, Size> const& a, Vector<Type, Size> const& b)
+{
+    Vector<Type, Size> result;
+    for (std::size_t n = 0; n < Size; ++n) {
+        result.data[n] = a.data[n] - b.data[n];
+    }
+    return result;
+}
+
+template <class Type, std::size_t Size>
 Vector<Type, Size> operator * (Vector<Type, Size> const& vec, Type const& value)
 {
     Vector<Type, Size> result;

@@ -80,7 +80,7 @@ Uniform_Map Map_Uniform_Locations(Shader_ID shader_id, Uniform_List uniforms);
 // test code for the triangle example
 void Create_Test_Buffer(uint& VBO, uint& VAO);
 void Create_Cube_Buffer(uint& VBO, uint& VAO);
-void Render_Test(Shader& shader, uint VAO, uint size);
+void Render_Test(Shader& shader, uint VAO, uint size, float3 pos);
 
 struct Shader {
 

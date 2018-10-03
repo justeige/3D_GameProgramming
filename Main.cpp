@@ -3,6 +3,7 @@
 #include "Matrix.h"
 #include "Graphics.h"
 #include "Model.h"
+#include "Input.h"
 
 #include <iostream>
 
@@ -15,7 +16,7 @@ float44 mat;
 int main()
 {
     /// test the model loading
-    auto obj = Model::LoadOBJ("test.blend");
+    /// auto obj = Model::LoadOBJ("test.blend");
 
     // try and create the opengl context/window
     auto window = GL::Global_Init();
@@ -26,6 +27,8 @@ int main()
 
     GL::Shader test_shader("shader/test.vertex", "shader/test.fragment", {"offset"});
 
+    Input_Controller input { window };
+
     uint VBO, VAO;
     GL::Create_Cube_Buffer(VBO, VAO);
 
@@ -33,9 +36,11 @@ int main()
     while (GL::Is_Open(window)) {
         counter++;
 
+        input.update(0.5f);
+
         GL::Clear_Screen();
         GL::Close_On_Escape(window);
-        GL::Render_Test(test_shader, VAO, 36);
+        GL::Render_Test(test_shader, VAO, 36, input.position);
         GL::Poll_And_Swap(window);
 
         if (counter > 2000) { break; } // a real timed solution would be better...

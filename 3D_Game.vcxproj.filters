@@ -7,6 +7,7 @@
     <ClCompile Include="stb.cpp" />
     <ClCompile Include="File.cpp" />
     <ClCompile Include="Model.cpp" />
+    <ClCompile Include="Input.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Common.h" />
@@ -16,5 +17,6 @@
     <ClInclude Include="Matrix.h" />
     <ClInclude Include="Profiling.h" />
     <ClInclude Include="Model.h" />
+    <ClInclude Include="Input.h" />
   </ItemGroup>
 </Project>
