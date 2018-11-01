@@ -2,6 +2,9 @@
 
 #include "Common.h"
 #include "Vector.h"
+#include "Vertex.h"
+#include "Texture.h"
+#include "Mesh.h"
 
 #include <map>
 #include <string>
@@ -21,14 +24,6 @@ namespace GL {
 
 struct Shader;
 
-// basic data structures
-struct Vertex {
-    float3 position;
-    float3 normal;
-    float2 tex_coord;
-};
-using Vertices = std::vector<Vertex>;
-
 // basic functions
 Window* Global_Init();     // if the init fails, the function return nullptr
 void    Global_Teardown(); // needs to be called at the end of an successfull program
@@ -38,17 +33,6 @@ void    Close_On_Escape(Window* window);
 void    Clear_Screen();
 
 // texture specific functions
-struct Texture {
-    uint id;
-    std::string path;
-    enum Type {
-        diffuse,
-        specular,
-        normal
-    } type;
-};
-using Textures = std::vector<Texture>;
-
 Texture Allocate_Texture(std::string const& file_path);
 
 struct Image {
@@ -61,14 +45,6 @@ struct Image {
     int y = 0;
     int channels = 0;
 };;
-
-// mesh & model specific code
-struct Mesh {
-    uint     VAO, VBO, EBO;
-    Vertices vertices;
-    Indices  indices;
-    Textures textures;
-};
 
 Mesh Allocate_Mesh(Vertices v, Indices i, Textures t);
 void Render_Mesh(Mesh const& m, Shader const& s);

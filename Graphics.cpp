@@ -124,7 +124,7 @@ void GL::Clear_Screen()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
-GL::Texture GL::Allocate_Texture(std::string const& file_path)
+Texture GL::Allocate_Texture(std::string const& file_path)
 {
     // try loading the texture first, no point in allocating any buffer on the gpu otherwise!
     Image image(file_path.c_str());
@@ -143,16 +143,16 @@ GL::Texture GL::Allocate_Texture(std::string const& file_path)
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, image.x, image.y, 0, GL_RGB, GL_UNSIGNED_BYTE, image.data);
     glGenerateMipmap(GL_TEXTURE_2D);
 
-    GL::Texture t = {};
+    Texture t = {};
     t.id = texture_id;
-    t.type = GL::Texture::normal;
+    t.type = Texture::normal;
     t.path = file_path;
     return t;
 }
 
-GL::Mesh GL::Allocate_Mesh(Vertices v, Indices i, Textures t)
+Mesh GL::Allocate_Mesh(Vertices v, Indices i, Textures t)
 {
-    Mesh mesh = {}; /*VAO, VBO and EBO will be init from opengl routines!*/
+    Mesh mesh = {}; // VAO, VBO and EBO will be init from opengl routines!
     mesh.vertices = v;
     mesh.indices  = i;
     mesh.textures  = t;
@@ -182,27 +182,47 @@ GL::Mesh GL::Allocate_Mesh(Vertices v, Indices i, Textures t)
     return mesh;
 }
 
-void GL::Render_Mesh(Mesh const& m, Shader const& s)
+void GL::Render_Mesh(Mesh const& mesh, Shader const& shader)
 {
-    s.apply();
+    shader.apply();
 
-    //for (unsigned int i = 0; i < m.textures.size(); i++) {
-    //    glActiveTexture(GL_TEXTURE0 + i); // active proper texture unit before binding
-    //
-    //    /// find uniform in shader
-    //
-    //    // bind the texture
-    //    glBindTexture(GL_TEXTURE_2D, m.textures[i].id);
-    //}
+    uint diffuse_count  = 1;
+    uint specular_count = 1;
+
+    for (unsigned int i = 0; i < mesh.textures.size(); i++) {
+
+        // activate proper texture unit before binding
+        glActiveTexture(GL_TEXTURE0 + i);
+
+        // read the texture number
+        std::string number {};
+        Texture::Type type = mesh.textures[i].type;
+        if (type == Texture::diffuse) {
+            number = std::to_string(diffuse_count);
+            diffuse_count++;
+        }
+        else if (type == Texture::specular) {
+            number = std::to_string(specular_count);
+            specular_count++;
+        }
+
+        // send information to the shader
+        const std::string tex_name = "material." + std::to_string(type) + number;
+        shader.send_value(tex_name.c_str(), (float) i);
+
+        // bind the texture
+        glBindTexture(GL_TEXTURE_2D, mesh.textures[i].id);
+    }
 
     // draw mesh
-    glBindVertexArray(m.VAO);
-    glDrawElements(GL_TRIANGLES, m.indices.size(), GL_UNSIGNED_INT, 0);
+    glBindVertexArray(mesh.VAO);
+    glDrawElements(GL_TRIANGLES, mesh.indices.size(), GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);
 
     // set everything back to defaults
     glActiveTexture(GL_TEXTURE0);
 }
+
 
 // ---------------------------------------------
 // shader code

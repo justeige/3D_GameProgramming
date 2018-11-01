@@ -18,5 +18,8 @@
     <ClInclude Include="Profiling.h" />
     <ClInclude Include="Model.h" />
     <ClInclude Include="Input.h" />
+    <ClInclude Include="Vertex.h" />
+    <ClInclude Include="Texture.h" />
+    <ClInclude Include="Mesh.h" />
   </ItemGroup>
 </Project>

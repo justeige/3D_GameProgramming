@@ -10,6 +10,7 @@
 
 #pragma comment(lib, "opengl32.lib")
 #pragma comment(lib, "glfw3dll.lib")
+#pragma comment(lib, "assimp32.lib")
 
 float44 mat;
 

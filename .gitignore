@@ -9,3 +9,6 @@
 
 *.suo
 *Debug/
+*assimp/
+*assimp32.dll
+*assimp32.lib
