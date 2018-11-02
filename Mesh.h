@@ -19,3 +19,4 @@ struct Mesh {
     uint EBO = 0;
 
 };
+using Meshes = std::vector<Mesh>;

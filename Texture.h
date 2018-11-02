@@ -11,7 +11,8 @@ struct Texture {
     enum Type {
         diffuse,
         specular,
-        normal
+        normal,
+        height
     } type;
 };
 using Textures = std::vector<Texture>;
@@ -26,6 +27,8 @@ inline std::string to_string(Texture::Type type)
         return "texture_specular";
     case Texture::normal:
         return "texture_normal";
+    case Texture::height:
+        return "texture_height";
     default:
         break;
     }
