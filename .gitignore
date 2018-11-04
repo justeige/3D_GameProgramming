@@ -12,3 +12,5 @@
 *assimp/
 *assimp32.dll
 *assimp32.lib
+*models/
+assimp-vc140-mt.dll

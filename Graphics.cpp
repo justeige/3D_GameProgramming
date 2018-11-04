@@ -150,13 +150,8 @@ Texture GL::Allocate_Texture(std::string const& file_path)
     return t;
 }
 
-Mesh GL::Allocate_Mesh(Vertices v, Indices i, Textures t)
+void GL::Allocate_Mesh(Mesh& mesh)
 {
-    Mesh mesh = {}; // VAO, VBO and EBO will be init from opengl routines!
-    mesh.vertices = v;
-    mesh.indices  = i;
-    mesh.textures  = t;
-
     glGenVertexArrays(1, &mesh.VAO);
     glGenBuffers(1, &mesh.VBO);
     glGenBuffers(1, &mesh.EBO);
@@ -177,25 +172,29 @@ Mesh GL::Allocate_Mesh(Vertices v, Indices i, Textures t)
     // vertex texture coords
     glEnableVertexAttribArray(2);
     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, tex_coord));
+    // vertex tangent
+    glEnableVertexAttribArray(3);
+    glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, tangent));
+    // vertex bitangent
+    glEnableVertexAttribArray(4);
+    glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, bitangent));
+
 
     glBindVertexArray(0);
-    return mesh;
 }
 
-void GL::Render_Mesh(Mesh const& mesh, Shader const& shader)
+void Render_Mesh_internal(Mesh const& mesh, GL::Shader const& shader)
 {
-    shader.apply();
-
-    uint diffuse_count  = 1;
+    uint diffuse_count = 1;
     uint specular_count = 1;
 
-    for (unsigned int i = 0; i < mesh.textures.size(); i++) {
+    for (uint i = 0; i < mesh.textures.size(); i++) {
 
         // activate proper texture unit before binding
         glActiveTexture(GL_TEXTURE0 + i);
 
         // read the texture number
-        std::string number {};
+        std::string number{};
         Texture::Type type = mesh.textures[i].type;
         if (type == Texture::diffuse) {
             number = std::to_string(diffuse_count);
@@ -208,7 +207,7 @@ void GL::Render_Mesh(Mesh const& mesh, Shader const& shader)
 
         // send information to the shader
         const std::string tex_name = "material." + std::to_string(type) + number;
-        shader.send_value(tex_name.c_str(), (float) i);
+        shader.send_value(tex_name.c_str(), (float)i);
 
         // bind the texture
         glBindTexture(GL_TEXTURE_2D, mesh.textures[i].id);
@@ -222,6 +221,21 @@ void GL::Render_Mesh(Mesh const& mesh, Shader const& shader)
     // set everything back to defaults
     glActiveTexture(GL_TEXTURE0);
 }
+
+void GL::Render_Mesh(Mesh const& mesh, Shader const& shader)
+{
+    shader.apply(); // activate!
+    Render_Mesh_internal(mesh, shader);
+}
+
+void GL::Render_Meshes(Meshes const& meshes, Shader const& shader)
+{
+    shader.apply(); // activate only once!
+    for_size(n, meshes) {
+        Render_Mesh_internal(meshes[n], shader);
+    }
+}
+
 
 
 // ---------------------------------------------
@@ -253,8 +267,10 @@ void GL::Shader::send_value(const char* name, int value) const
 
 void GL::Shader::send_value(const char* name, float value) const
 {
-    int location = uniforms.at(name);
-    glUniform1f(location, value);
+    //int location = uniforms.at(name);
+    //glUniform1f(location, value);
+    auto loc = glGetUniformLocation(program_id, name);
+    glUniform1f(loc, value);
 }
 
 void GL::Shader::send_value(const char* name, float3 value) const

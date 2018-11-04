@@ -259,8 +259,27 @@ Mesh Process_Mesh(aiMesh *mesh, aiScene const* scene, std::string const& directo
             vertex.tex_coord = {};
         }
 
-        /// TODO tangent and bitangets?
+        // tangent
+        if (mesh->mTangents != nullptr) {
+            vertex.tangent.x = mesh->mTangents[i].x;
+            vertex.tangent.y = mesh->mTangents[i].y;
+            vertex.tangent.z = mesh->mTangents[i].z;
+        }
+        else {
+            vertex.tangent = {}; // default to 0,0,0
+        }
 
+        // bitangent
+        if (mesh->mBitangents != nullptr) {
+            vertex.bitangent.x = mesh->mBitangents[i].x;
+            vertex.bitangent.y = mesh->mBitangents[i].y;
+            vertex.bitangent.z = mesh->mBitangents[i].z;
+        }
+        else {
+            vertex.bitangent = {}; // default to 0,0,0
+        }
+
+        vertices.push_back(vertex);
     }
 
     // process indices

@@ -46,8 +46,9 @@ struct Image {
     int channels = 0;
 };;
 
-Mesh Allocate_Mesh(Vertices v, Indices i, Textures t);
+void Allocate_Mesh(Mesh& m);
 void Render_Mesh(Mesh const& m, Shader const& s);
+void Render_Meshes(Meshes const& m, Shader const& s);
 
 // shader specific
 Shader_ID   Create_Shader_Program(const char* vertex_path, const char* fragment_path);
