@@ -61,9 +61,6 @@ void Render_Test(Shader& shader, uint VAO, uint size, float3 pos);
 
 struct Shader {
 
-    // create from external values
-    Shader(Shader_ID prg, Uniform_Map u) : program_id(prg), uniforms(u) {}
-
     // create from files
     Shader(const char* vertex_path, const char* fragment_path, Uniform_List uniform_names);
 
@@ -76,5 +73,10 @@ struct Shader {
 
     Shader_ID   program_id;
     Uniform_Map uniforms;
+
+    std::string vertex_path;
+    std::string fragment_path;
+    std::string cached_vertex_code;
+    std::string cached_fragment_code;
 };
 }

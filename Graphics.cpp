@@ -242,7 +242,7 @@ void GL::Render_Meshes(Meshes const& meshes, Shader const& shader)
 // shader code
 // ---------------------------------------------
 #pragma region "Shader"
-GL::Shader::Shader(const char* vertex_path, const char* fragment_path, Uniform_List uniform_names)
+GL::Shader::Shader(const char* vertex_path, const char* fragment_path, Uniform_List uniform_names) : vertex_path { vertex_path }, fragment_path { fragment_path }
 {
     program_id = GL::Create_Shader_Program(vertex_path, fragment_path);
     uniforms = GL::Map_Uniform_Locations(program_id, uniform_names);
